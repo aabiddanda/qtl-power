@@ -1,5 +1,4 @@
 import numpy as np
-from scipy.interpolate import interp1d
 from scipy.optimize import brentq
 from scipy.stats import fisher_exact, ncx2
 
@@ -74,7 +73,7 @@ class ExtremePhenotype_Power:
         assert niter > 0
         n_reject = 0
         for i in range(niter):
-            ac, phenotype = sim_extreme_pheno(n=n, maf=maf, beta=beta, seed=i)
+            ac, phenotype = self.sim_extreme_pheno(n=n, maf=maf, beta=beta, seed=i)
             excontrols = phenotype <= np.quantile(phenotype, q0)  # bottom percentiles
             excases = phenotype >= np.quantile(phenotype, 1 - q1)  # top-percentiles
             table = np.array(
