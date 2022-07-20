@@ -29,8 +29,8 @@ class RareVariantBurdenPower:
         assert jp > 0
         assert (tev > 0) & (tev < 1.0)
         j = ws.size
-        sum_weights = np.sum((w**2) * (ps**2) * (1.0 - ps))
-        sum_test = np.sum((w**2) * ps * (1.0 - ps))
+        sum_weights = np.sum((ws**2) * (ps**2) * (1.0 - ps))
+        sum_test = np.sum((ws**2) * ps * (1.0 - ps))
         ncp = n * ((jd - jp) ** 2) * tev * sum_weights / (j * np.sum(ps * sum_test))
         return ncp
 
@@ -75,3 +75,11 @@ class RareVariantVCPower:
         assert n > 0
         assert (tev > 0) & (tev < 1.0)
         pass
+
+    def sim_af_weights(self, n=100, a1=1.0, b1=1.0):
+        """Simulating allele frequencies from a gamma distribution.
+        NOTE: this is just under a specific model ...
+        """
+        ps = gamma.rvs(a1, scale=1 / b1, size=n)
+        ws = 1.0 / np.sqrt(ps * (1.0 - ps))
+        return ws, ps
