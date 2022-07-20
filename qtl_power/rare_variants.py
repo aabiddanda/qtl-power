@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.optimize import brentq
-from scipy.stats import ncx2
+from scipy.stats import gamma, ncx2
 
 
 class RareVariantBurdenPower:
@@ -10,6 +10,9 @@ class RareVariantBurdenPower:
 
     def __init__(self):
         pass
+
+    def llr_power(self, alpha=5e-8, df=1, ncp=1):
+        return 1.0 - ncx2.cdf(ncx2.ppf(1.0 - alpha, df, 0), df, ncp)
 
     def ncp_burden_test_model1(self, n=100, j=30, jd=10, jp=10, tev=0.1):
         """Approximation of the non-centrality parameter under model S1 from Derkach et al.
@@ -21,8 +24,13 @@ class RareVariantBurdenPower:
         ncp = n * ((jd - jp) ** 2) * tev / (j * (jd + jp))
         return ncp
 
+    def power_burden_model1(self, n=100, j=30, jd=10, jp=10, tev=0.1):
+        """Estimate the power under a burden model 1."""
+        ncp = self.ncp_burden_test_model1(n=n, j=j, jd=jd, jp=jp, tev=tev)
+        return self.llr_power(alpha=alpha, ncp=ncp)
+
     def ncp_burden_test_model2(self, ws, ps, jd=10, jp=10, n=100, tev=0.1):
-        """ """
+        """Estimate NCP burden under Model 2."""
         assert ws.size == ps.size
         assert n > 0
         assert jd > 0
@@ -33,6 +41,11 @@ class RareVariantBurdenPower:
         sum_test = np.sum((ws**2) * ps * (1.0 - ps))
         ncp = n * ((jd - jp) ** 2) * tev * sum_weights / (j * np.sum(ps * sum_test))
         return ncp
+
+    def power_burden_model2(self, ws, ps, jd=10, jp=10, n=100, tev=0.1):
+        """Estimate power under burden for model 2."""
+        ncp = self.ncp_burden_test_model2(ws, ps, jd=jd, jp=jp, n=n, tev=tev)
+        return self.llr_power(alpha=alpha, ncp=ncp)
 
 
 class RareVariantVCPower:
