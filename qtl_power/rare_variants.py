@@ -24,7 +24,7 @@ class RareVariantBurdenPower:
         ncp = n * ((jd - jp) ** 2) * tev / (j * (jd + jp))
         return ncp
 
-    def power_burden_model1(self, n=100, j=30, jd=10, jp=10, tev=0.1):
+    def power_burden_model1(self, n=100, j=30, jd=10, jp=10, tev=0.1, alpha=1e-6):
         """Estimate the power under a burden model 1."""
         ncp = self.ncp_burden_test_model1(n=n, j=j, jd=jd, jp=jp, tev=tev)
         return self.llr_power(alpha=alpha, ncp=ncp)
@@ -42,7 +42,7 @@ class RareVariantBurdenPower:
         ncp = n * ((jd - jp) ** 2) * tev * sum_weights / (j * np.sum(ps * sum_test))
         return ncp
 
-    def power_burden_model2(self, ws, ps, jd=10, jp=10, n=100, tev=0.1):
+    def power_burden_model2(self, ws, ps, jd=10, jp=10, n=100, tev=0.1, alpha=1e-6):
         """Estimate power under burden for model 2."""
         ncp = self.ncp_burden_test_model2(ws, ps, jd=jd, jp=jp, n=n, tev=tev)
         return self.llr_power(alpha=alpha, ncp=ncp)
