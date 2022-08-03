@@ -1,18 +1,53 @@
+"""Estimating power for rare-variant association methods from PAGEANT."""
+
 import numpy as np
 from scipy.optimize import brentq
 from scipy.stats import gamma, ncx2
 
 
-class RareVariantBurdenPower:
-    """
-    Approximation of power for rare-variant burden tests based on results from Derkach et al (2018)
-    """
+class RareVariantPower:
+    """Power calculator for rare-variant power."""
 
     def __init__(self):
+        """Initialize rare-variant power calculator."""
         pass
 
-    def llr_power(self, alpha=5e-8, df=1, ncp=1):
-        return 1.0 - ncx2.cdf(ncx2.ppf(1.0 - alpha, df, 0), df, ncp)
+    def llr_power(self, alpha=1e-6, df=1, ncp=1, ncp0=0):
+        """Power under a non-central chi-squared distribution.
+
+        Args:
+            alpha (`float`): p-value threshold for GWAS
+            df (`int`): degrees of freedom
+            ncp (`float`): non-centrality parameter
+            ncp0 (`float`): null non-centrality parameter
+        Returns:
+            power (`float`): power for association
+
+        """
+        return 1.0 - ncx2.cdf(ncx2.ppf(1.0 - alpha, df, ncp0), df, ncp)
+
+    def sim_af_weights(self, j=100, a1=1.0, b1=1.0):
+        """Simulate allele frequencies from a gamma distribution.
+
+        Note: ideally the gamma distribution is derived from realized catalogues of variation.
+
+        Args:
+            j (`int`): number of variants
+            a1 (`float`): shape parameter of a gamma distribution
+            b1 (`float`): scale parameter of a gamma distribution
+
+        """
+        assert j > 0
+        ps = gamma.rvs(a1, scale=1 / b1, size=j)
+        return ps
+
+
+class RareVariantBurdenPower(RareVariantPower):
+    """Approximation of power for rare-variant burden tests based on results from Derkach et al (2018)."""
+
+    def __init__(self):
+        """Initialize the power calculator for the burden tests."""
+        super(RareVariantBurdenPower, self).__init__()
 
     def ncp_burden_test_model1(self, n=100, j=30, jd=10, jp=10, tev=0.1):
         """Approximation of the non-centrality parameter under model S1 from Derkach et al.
@@ -21,11 +56,14 @@ class RareVariantBurdenPower:
         This is also known in the literature as the alpha=0 model.
 
         Args:
-            - n: total sample size
-            - j: total number of variants in the gene
-            - jd: number of dises variants in the gene
-            - jp: number of protective variants in the gene
-            - tev: proportion of variance explained by gene
+            n: total sample size
+            j: total number of variants in the gene
+            jd: number of disease variants in the gene
+            jp: number of protective variants in the gene
+            tev: proportion of variance explained by gene
+        Returns:
+           ncp: non-centrality parameter
+
         """
         assert (tev > 0) & (tev < 1.0)
         ncp = n * ((jd - jp) ** 2) * tev / (j * (jd + jp))
@@ -52,30 +90,15 @@ class RareVariantBurdenPower:
     def power_burden_model2(self, ws, ps, jd=10, jp=10, n=100, tev=0.1, alpha=1e-6):
         """Estimate power under burden for model 2."""
         ncp = self.ncp_burden_test_model2(ws, ps, jd=jd, jp=jp, n=n, tev=tev)
-        return self.llr_power(alpha=alpha, ncp=ncp)
+        return self.llr_power(alpha=alpha, ncp=ncp, ncp0=0)
 
 
-class RareVariantVCPower:
+class RareVariantVCPower(RareVariantPower):
     """Approximation of power for rare-variant variance component tests based on results from Derkach et al (2018)."""
 
     def __init__(self):
-        pass
-
-    def sim_af_weights(self, j=100, a1=1.0, b1=1.0):
-        """Simulating allele frequencies from a gamma distribution.
-
-        Args:
-            j (`int`): number of variants
-            a1 (`float`): shape parameter of a gamma distribution
-            b1 (`float`): scale parameter of a gamma distribution
-        """
-        assert j > 0
-        ps = gamma.rvs(a1, scale=1 / b1, size=j)
-        return ps
-
-    def llr_power(self, alpha=1e-6, df=1, ncp=1, ncp0=0):
-        """We have to include a null NCP due to the weighted distribution."""
-        return 1.0 - ncx2.cdf(ncx2.ppf(1.0 - alpha, df, ncp0), df, ncp)
+        """Initialize the power calculator for the variance-component tests."""
+        super(RareVariantBurdenPower, self).__init__()
 
     def match_cumulants_ncp(self, c1, c2, c3, c4):
         """Match the cumulants to a single non-centrality parameter value."""
@@ -90,9 +113,17 @@ class RareVariantVCPower:
     def ncp_vc_first_order_model1(self, ws, ps, n=100, tev=0.1):
         """Approximation of the non-centrality parameter under model S1 from Derkach et al.
 
-        The key assumption in this case is that there is independence between an alleles effect-size and its MAF.
+        The key assumption is independence between an alleles effect-size and its MAF, from Table S1 in Derkach et al.
 
-        This is from Table S1 in Derkach et al.
+        Args:
+            ws (`np.array`): numpy array of weights per-variant
+            ps (`np.array`): numpy array of allele frequencies
+            n (`int`): sample size
+            tev (`float`): total explained variance by a locus
+
+        Returns:
+           ncp (`float`): non-centrality parameter
+
         """
         assert ws.size == ps.size
         assert n > 0
@@ -117,7 +148,8 @@ class RareVariantVCPower:
             alpha (`float`): total significance level for estimation of power
 
         Returns:
-            Predicted power under a chi-squared distribution...
+           power (`float`): estimated power under this variance component model.
+
         """
         ncp0 = self.ncp_vc_first_order_model1(ws, ps, n, 0.0)
         ncp = self.ncp_vc_first_order_model1(ws, ps, n, tev)
@@ -126,7 +158,7 @@ class RareVariantVCPower:
     def effect_size_vc_first_order_model1(
         self, ws, ps, n=100, power=0.8, alpha=1e-6, df=1
     ):
-        """The total explained variance to discover an effect with this degree of power.
+        """Estimate the total explained variance to discover an effect with this degree of power.
 
         Args:
             ws (`np.array`): numpy array of weights per-variant
@@ -136,8 +168,9 @@ class RareVariantVCPower:
             alpha (`float`): level of significance for
             df (`int`): degrees of freedom for test
 
-        Return:
-            - opt_tev: the total explained variance by the gene detectable at this power
+        Returns:
+            opt_tev: the total explained variance by the gene detectable at this power
+
         """
         assert ws.ndim == 1
         assert ps.ndim == 1
