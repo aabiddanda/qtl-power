@@ -2,3 +2,5 @@ numpy
 scipy
 matplotlib
 jupyter-notebook
+pytest
+pytest-cov
