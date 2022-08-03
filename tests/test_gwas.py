@@ -1,15 +1,16 @@
 """Testing module for GWAS power calculations."""
-# import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
-from qtl_power.gwas import GWAS, GwasCaseControl, GwasQuant
+from qtl_power.gwas import GWAS, GwasBinary, GwasQuant
 
 
 @given(
-    a=st.floats(min_value=0, max_value=1),
-    d=st.integers(min_value=1),
-    ncp=st.floats(allow_infinity=False, allow_nan=False),
+    a=st.floats(
+        min_value=0, max_value=1, exclude_min=True, exclude_max=True, allow_nan=False
+    ),
+    d=st.integers(min_value=1, max_value=1000),
+    ncp=st.floats(min_value=-1e6, max_value=1e6, allow_infinity=False, allow_nan=False),
 )
 def test_llr_power(a, d, ncp):
     """Test calculation of log-likelihood ratio calculation."""
@@ -18,9 +19,11 @@ def test_llr_power(a, d, ncp):
 
 
 @given(
-    n=st.integers(min_value=1, allow_infinity=False),
+    n=st.integers(min_value=1),
     p=st.floats(min_value=0.0, max_value=1.0),
-    beta=st.floats(allow_infinity=False, allow_nan=False),
+    beta=st.floats(
+        min_value=-1e6, max_value=1e6, allow_infinity=False, allow_nan=False
+    ),
     r2=st.floats(min_value=0.0, max_value=1.0),
 )
 def test_ncp_quant(n, p, beta, r2):
@@ -30,11 +33,13 @@ def test_ncp_quant(n, p, beta, r2):
 
 
 @given(
-    n=st.integers(min_value=1, allow_infinity=False),
+    n=st.integers(min_value=1),
     p=st.floats(min_value=0.0, max_value=1.0),
-    beta=st.floats(allow_infinity=False, allow_nan=False),
+    beta=st.floats(
+        min_value=-1e6, max_value=1e6, allow_infinity=False, allow_nan=False
+    ),
     r2=st.floats(min_value=0.0, max_value=1.0),
-    alpha=st.floats(min_value=0.0, max_value=1.0),
+    alpha=st.floats(exclude_min=True, exclude_max=True, min_value=0.0, max_value=1.0),
 )
 def test_quant_trait_power(n, p, beta, r2, alpha):
     """Test the function to obtain power under a quantitative model."""
@@ -44,27 +49,46 @@ def test_quant_trait_power(n, p, beta, r2, alpha):
 
 
 @given(
-    n=st.integers(min_value=1, allow_infinity=False),
+    n=st.integers(min_value=1),
     p=st.floats(min_value=0.0, max_value=1.0),
-    power=st.floats(min_value=0.0, max_value=1.0),
+    beta=st.floats(
+        min_value=-1e6, max_value=1e6, allow_infinity=False, allow_nan=False
+    ),
     r2=st.floats(min_value=0.0, max_value=1.0),
-    alpha=st.floats(min_value=0.0, max_value=1.0),
+    prop_cases=st.floats(
+        min_value=0.0,
+        max_value=1.0,
+        exclude_min=True,
+        exclude_max=True,
+        allow_infinity=False,
+        allow_nan=False,
+    ),
 )
-def test_quant_trait_beta_power(n, p, power, r2, alpha):
-    """Test the function to obtain power under a quantitative model."""
-    obj = GwasQuant()
-    beta = obj.quant_trait_beta_power(n, p, power, r2, alpha)
-    assert beta >= 0
+def test_ncp_binary(n, p, beta, r2, prop_cases):
+    """Test NCP generation in a case/control model."""
+    obj = GwasBinary()
+    obj.ncp_binary(n, p, beta, r2, prop_cases)
 
 
 @given(
-    n=st.integers(min_value=1, allow_infinity=False),
+    n=st.integers(min_value=1),
     p=st.floats(min_value=0.0, max_value=1.0),
-    power=st.floats(min_value=0.0, max_value=1.0),
+    beta=st.floats(
+        min_value=-1e6, max_value=1e6, allow_infinity=False, allow_nan=False
+    ),
     r2=st.floats(min_value=0.0, max_value=1.0),
-    prop_cases=st.floats(min_value=0.0, max_value=1.0),
+    alpha=st.floats(exclude_min=True, exclude_max=True, min_value=0.0, max_value=1.0),
+    prop_cases=st.floats(
+        min_value=0.0,
+        max_value=1.0,
+        exclude_min=True,
+        exclude_max=True,
+        allow_infinity=False,
+        allow_nan=False,
+    ),
 )
-def test_ncp_case_control(n, p, beta, r2, prop_cases):
-    """Test NCP generation in a case/control model."""
-    obj = GwasCaseControl()
-    obj.ncp_case_control(n, p, beta, r2, prop_cases)
+def test_binary_trait_power(n, p, beta, r2, alpha, prop_cases):
+    """Test the function to obtain power under a quantitative model."""
+    obj = GwasBinary()
+    power = obj.binary_trait_power(n, p, beta, r2, alpha, prop_cases)
+    assert (power >= 0) & (power <= 1)
