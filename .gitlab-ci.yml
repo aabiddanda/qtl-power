@@ -13,5 +13,4 @@ run_pytest:
     - mamba install pytest-cov
     - pip install hypothesis
     - pytest --cov | awk '/^TOTAL/ {print $4}' | sed 's/%//' | awk '{print \"Final coverage:\t\"$0}'
-    # - pytest --cov | awk '/^TOTAL/ {print $4}' | sed 's/%//' | awk '{print \"Final coverage: \"$0}'
   coverage: '/Final coverage: \d+\.?\d*/'
