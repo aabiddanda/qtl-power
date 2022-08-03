@@ -1,4 +1,6 @@
 """Functions to calculate power in GWAS designs."""
+import sys
+
 import numpy as np
 from scipy.optimize import brentq
 from scipy.stats import ncx2
@@ -84,7 +86,10 @@ class GwasQuant(GWAS):
             lambda beta: self.quant_trait_power(n=n, p=p, r2=r2, beta=beta, alpha=alpha)
             - power
         )
-        opt_beta = brentq(f, 0.0, np.inf)
+        try:
+            opt_beta = brentq(f, 0.0, sys.float_info.max)
+        except OverflowError:
+            opt_beta = np.nan
         return opt_beta
 
 
@@ -160,5 +165,8 @@ class GwasBinary(GWAS):
             )
             - power
         )
-        opt_beta = brentq(f, 0.0, np.inf)
+        try:
+            opt_beta = brentq(f, 0.0, sys.float_info.max)
+        except OverflowError:
+            opt_beta = np.nan
         return opt_beta
