@@ -84,7 +84,7 @@ class GwasQuant(GWAS):
             lambda beta: self.quant_trait_power(n=n, p=p, r2=r2, beta=beta, alpha=alpha)
             - power
         )
-        opt_beta = brentq(f, 0.0, 1e2)
+        opt_beta = brentq(f, 0.0, 1e6)
         return opt_beta
 
 
