@@ -24,6 +24,8 @@ class RareVariantPower:
             power (`float`): power for association
 
         """
+        assert df > 0
+        assert (alpha < 1.0) & (alpha > 0)
         return 1.0 - ncx2.cdf(ncx2.ppf(1.0 - alpha, df, ncp0), df, ncp)
 
     def sim_af_weights(self, j=100, a1=1.0, b1=1.0):
@@ -56,15 +58,17 @@ class RareVariantBurdenPower(RareVariantPower):
         This is also known in the literature as the alpha=0 model.
 
         Args:
-            n: total sample size
-            j: total number of variants in the gene
-            jd: number of disease variants in the gene
-            jp: number of protective variants in the gene
-            tev: proportion of variance explained by gene
+            n (`int`): total sample size
+            j (`int`): total number of variants in the gene
+            jd (`int`): number of disease variants in the gene
+            jp (`int`): number of protective variants in the gene
+            tev (`int`): proportion of variance explained by gene
         Returns:
-           ncp: non-centrality parameter
-
+           ncp (`float`): non-centrality parameter
         """
+        assert n > 0
+        assert j > 0
+        assert (jd + jp) <= j
         assert (tev > 0) & (tev < 1.0)
         ncp = n * ((jd - jp) ** 2) * tev / (j * (jd + jp))
         return ncp
@@ -72,10 +76,21 @@ class RareVariantBurdenPower(RareVariantPower):
     def power_burden_model1(self, n=100, j=30, jd=10, jp=10, tev=0.1, alpha=1e-6):
         """Estimate the power under a burden model 1."""
         ncp = self.ncp_burden_test_model1(n=n, j=j, jd=jd, jp=jp, tev=tev)
-        return self.llr_power(alpha=alpha, ncp=ncp)
+        return self.llr_power(alpha=alpha, ncp=ncp, ncp0=0)
 
     def ncp_burden_test_model2(self, ws, ps, jd=10, jp=10, n=100, tev=0.1):
-        """Estimate NCP burden under Model 2."""
+        """Estimate the non-centrality parameter for burden under Model 2.
+
+        Args:
+            ws (`np.array`): array of weights for alleles.
+            ps (`np.array`): array of variant allele frequencies.
+            jd (`int`): number of disease variants.
+            jp (`int`): number of protective variants.
+            n (`int`): sample-size.
+            tev (`int`): total explained variance in trait of locus.
+        Returns:
+            ncp (`float`): non-centrality parameter for chi-squared distribution
+        """
         assert ws.size == ps.size
         assert n > 0
         assert jd > 0
@@ -98,10 +113,10 @@ class RareVariantVCPower(RareVariantPower):
 
     def __init__(self):
         """Initialize the power calculator for the variance-component tests."""
-        super(RareVariantBurdenPower, self).__init__()
+        super(RareVariantVCPower, self).__init__()
 
-    def match_cumulants_ncp(self, c1, c2, c3, c4):
-        """Match the cumulants to a single non-centrality parameter value."""
+    def opt_match_cumulants(self, c1, c2, c3, c4):
+        """The optimization approach to cumulant matching."""
         f1 = lambda l: (1.0 + l) - c1
         f2 = lambda l: (2.0 + 4 * l) - c2
         f3 = lambda l: (8.0 + 24 * l) - c3
@@ -109,6 +124,26 @@ class RareVariantVCPower(RareVariantPower):
         f_tot = lambda l: f1(l) + f2(l) + f3(l) + f4(l)
         opt_ncp = brentq(f_tot, 0.0, 1e3)
         return opt_ncp
+
+    def match_cumulants_ncp(self, c1, c2, c3, c4):
+        """Obtain the degrees of freedom and non-centrality parameter from cumulants.
+
+        Args:
+            c1 (`float`): first cumulant of non-central chi-squared dist.
+            c2 (`float`): second cumulant of non-central chi-squared dist.
+            c3 (`float`): third cumulant of non-central chi-squared dist.
+            c4 (`float`): fourth cumulant of non-central chi-squared dist.
+        """
+        s1 = c3 / c2 ** (3 / 2)
+        s2 = c4 / c2**2
+        if (s1**2) > s2:
+            a = 1 / (s1 - np.sqrt(s1**2 - s2))
+            ncp = s1 * a**3 - a**2
+            df = a**2 - 2 * ncp
+        else:
+            ncp = 0
+            df = c2**3 / c3**2
+        return df, ncp
 
     def ncp_vc_first_order_model1(self, ws, ps, n=100, tev=0.1):
         """Approximation of the non-centrality parameter under model S1 from Derkach et al.
@@ -175,6 +210,7 @@ class RareVariantVCPower(RareVariantPower):
         assert ws.ndim == 1
         assert ps.ndim == 1
         assert ws.size == ps.size
+        assert df > 0
         assert n > 0
         assert (power > 0) & (power < 1)
         f = (
