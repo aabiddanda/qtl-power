@@ -79,7 +79,19 @@ class RareVariantBurdenPower(RareVariantPower):
         return ncp
 
     def power_burden_model1(self, n=100, j=30, jd=10, jp=10, tev=0.1, alpha=1e-6):
-        """Estimate the power under a burden model 1."""
+        """Estimate the power under a burden model 1.
+
+        Args:
+            n (`int`): total sample size.
+            j (`int`): total number of variants in the gene.
+            jd (`int`): number of disease variants in the gene.
+            jp (`int`): number of protective variants in the gene.
+            tev (`int`): proportion of variance explained by gene.
+
+        Returns:
+           power (`float`): power for detection under the burden model.
+
+        """
         ncp = self.ncp_burden_test_model1(n=n, j=j, jd=jd, jp=jp, tev=tev)
         return self.llr_power(alpha=alpha, ncp=ncp, ncp0=0)
 
