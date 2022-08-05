@@ -20,6 +20,7 @@ class RareVariantPower:
             df (`int`): degrees of freedom
             ncp (`float`): non-centrality parameter
             ncp0 (`float`): null non-centrality parameter
+
         Returns:
             power (`float`): power for association
 
@@ -31,7 +32,7 @@ class RareVariantPower:
     def sim_af_weights(self, j=100, a1=1.0, b1=1.0):
         """Simulate allele frequencies from a gamma distribution.
 
-        Note: ideally the gamma distribution is derived from realized catalogues of variation.
+        Ideally the gamma distribution is derived from realized catalogues of variation.
 
         Args:
             j (`int`): number of variants
@@ -40,6 +41,8 @@ class RareVariantPower:
 
         """
         assert j > 0
+        assert a1 > 0
+        assert b1 > 0
         ps = gamma.rvs(a1, scale=1 / b1, size=j)
         return ps
 
@@ -63,8 +66,10 @@ class RareVariantBurdenPower(RareVariantPower):
             jd (`int`): number of disease variants in the gene
             jp (`int`): number of protective variants in the gene
             tev (`int`): proportion of variance explained by gene
+
         Returns:
            ncp (`float`): non-centrality parameter
+
         """
         assert n > 0
         assert j > 0
@@ -88,8 +93,10 @@ class RareVariantBurdenPower(RareVariantPower):
             jp (`int`): number of protective variants.
             n (`int`): sample-size.
             tev (`int`): total explained variance in trait of locus.
+
         Returns:
             ncp (`float`): non-centrality parameter for chi-squared distribution
+
         """
         assert ws.size == ps.size
         assert n > 0
@@ -116,7 +123,7 @@ class RareVariantVCPower(RareVariantPower):
         super(RareVariantVCPower, self).__init__()
 
     def opt_match_cumulants(self, c1, c2, c3, c4):
-        """The optimization approach to cumulant matching."""
+        """Optimize and find roots for cumulant matching."""
         f1 = lambda l: (1.0 + l) - c1
         f2 = lambda l: (2.0 + 4 * l) - c2
         f3 = lambda l: (8.0 + 24 * l) - c3
@@ -133,6 +140,7 @@ class RareVariantVCPower(RareVariantPower):
             c2 (`float`): second cumulant of non-central chi-squared dist.
             c3 (`float`): third cumulant of non-central chi-squared dist.
             c4 (`float`): fourth cumulant of non-central chi-squared dist.
+
         """
         s1 = c3 / c2 ** (3 / 2)
         s2 = c4 / c2**2
