@@ -11,7 +11,9 @@ from qtl_power.rare_variants import RareVariantPower
     ),
     d=st.integers(min_value=1, max_value=1000),
     ncp=st.floats(min_value=-1e6, max_value=1e6, allow_infinity=False, allow_nan=False),
-    ncp0=st.floats(min_value=-1e6, max_value=1e6, allow_infinity=False, allow_nan=False)
+    ncp0=st.floats(
+        min_value=-1e6, max_value=1e6, allow_infinity=False, allow_nan=False
+    ),
 )
 def test_llr_power(a, d, ncp, ncp0):
     """Test calculation of log-likelihood ratio calculation."""
