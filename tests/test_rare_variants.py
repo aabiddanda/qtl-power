@@ -1,5 +1,5 @@
 """Testing module for GWAS power calculations."""
-from hypothesis import given, assume
+from hypothesis import assume, given
 from hypothesis import strategies as st
 
 from qtl_power.rare_variants import RareVariantBurdenPower, RareVariantPower
