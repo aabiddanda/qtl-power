@@ -26,7 +26,7 @@ class RareVariantPower:
 
         """
         assert df > 0
-        assert (alpha < 1.0) & (alpha > 0)
+        assert (alpha > 0) & (alpha < 1)
         return 1.0 - ncx2.cdf(ncx2.ppf(1.0 - alpha, df, ncp0), df, ncp)
 
     def sim_af_weights(
@@ -47,6 +47,7 @@ class RareVariantPower:
             clip (`boolean`): perform clipping based on the current sample-size.
             seed (`int`): random seed.
             test (`string`): type of test to be performed (SKAT, Calpha, Hotelling)
+
         Returns:
             ws (`np.array`): array of weights per-variant.
             ps (`np.array`): array of allele frequencies.
@@ -59,7 +60,7 @@ class RareVariantPower:
         assert seed > 0
         assert test in ["SKAT", "Calpha", "Hotelling"]
         np.random.seed(seed)
-        ps = beta.rvs(a1, scale=1 / b1, size=j, random_state=seed)
+        ps = beta.rvs(a1, b1, size=j, random_state=seed)
         if clip:
             ps = np.clip(ps, 1.0 / n, (1 - 1.0 / n))
         if test == "SKAT":
@@ -103,11 +104,10 @@ class RareVariantBurdenPower(RareVariantPower):
         """Initialize the power calculator for the burden tests."""
         super(RareVariantBurdenPower, self).__init__()
 
-    def ncp_burden_test_model1(self, n=100, j=30, jd=10, jp=10, tev=0.1):
+    def ncp_burden_test_model1(self, n=100, j=30, jd=10, jp=0, tev=0.1):
         """Approximation of the non-centrality parameter under model S1 from Derkach et al.
 
         The key assumption in this case is that there is independence between an alleles effect-size and its MAF.
-        This is also known in the literature as the alpha=0 model.
 
         Args:
             n (`int`): total sample size
@@ -144,7 +144,7 @@ class RareVariantBurdenPower(RareVariantPower):
         ncp = self.ncp_burden_test_model1(n=n, j=j, jd=jd, jp=jp, tev=tev)
         return self.llr_power(alpha=alpha, ncp=ncp, ncp0=0)
 
-    def ncp_burden_test_model2(self, ws, ps, jd=10, jp=10, n=100, tev=0.1):
+    def ncp_burden_test_model2(self, ws, ps, jd=10, jp=0, n=100, tev=0.1):
         """Estimate the non-centrality parameter for burden under Model 2.
 
         Args:
@@ -161,8 +161,9 @@ class RareVariantBurdenPower(RareVariantPower):
         """
         assert ws.size == ps.size
         assert n > 0
-        assert jd > 0
-        assert jp > 0
+        assert jd >= 0
+        assert jp >= 0
+        assert jd + jp > 0
         assert (tev > 0) & (tev < 1.0)
         j = ws.size
         sum_weights = np.sum((ws**2) * (ps**2) * (1.0 - ps))
@@ -201,6 +202,9 @@ class RareVariantVCPower(RareVariantPower):
             c2 (`float`): second cumulant of non-central chi-squared dist.
             c3 (`float`): third cumulant of non-central chi-squared dist.
             c4 (`float`): fourth cumulant of non-central chi-squared dist.
+        Returns:
+            df (`int`): degrees of freedom for test.
+            ncp (`float`): non-centrality parameter.
 
         """
         s1 = c3 / c2 ** (3 / 2)
