@@ -206,6 +206,10 @@ class RareVariantVCPower(RareVariantPower):
            power (`float`): estimated power under this variance component model.
 
         """
+        assert ws.ndim == 1
+        assert ps.ndim == 1
+        assert n > 1
+        assert tev
         ncp0 = self.ncp_vc_first_order_model1(ws, ps, n, 0.0)
         ncp = self.ncp_vc_first_order_model1(ws, ps, n, tev)
         return self.llr_power(df=df, ncp0=ncp0, ncp=ncp, alpha=alpha)
@@ -219,8 +223,8 @@ class RareVariantVCPower(RareVariantPower):
             ws (`np.array`): numpy array of weights per-variant
             ps (`np.array`): numpy array of allele frequencies
             n (`int`): sample size (N)
-            power (`float`): set level of power to det
-            alpha (`float`): level of significance for
+            power (`float`): set level of power to determine impact.
+            alpha (`float`): level of significance for the rare-variant test
             df (`int`): degrees of freedom for test
 
         Returns:
