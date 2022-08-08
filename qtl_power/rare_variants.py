@@ -2,7 +2,7 @@
 
 import numpy as np
 from scipy.optimize import brentq
-from scipy.stats import gamma, ncx2
+from scipy.stats import beta, gamma, ncx2
 
 
 class RareVariantPower:
@@ -29,22 +29,71 @@ class RareVariantPower:
         assert (alpha < 1.0) & (alpha > 0)
         return 1.0 - ncx2.cdf(ncx2.ppf(1.0 - alpha, df, ncp0), df, ncp)
 
-    def sim_af_weights(self, j=100, a1=1.0, b1=1.0):
-        """Simulate allele frequencies from a gamma distribution.
+    def sim_af_weights(
+        self, j=100, a1=0.1846, b1=11.1248, n=100, clip=True, seed=42, test="SKAT"
+    ):
+        """Simulate allele frequencies from a beta distribution.
 
-        Ideally the gamma distribution is derived from realized catalogues of variation.
+        Ideally the beta distribution is derived from realized catalogues of variation.
+        The current parameters are based on 15k African ancestry individuals.
+        For mimicing a much larger set (112k) of Non-Finnish European individuals,
+        use the parameters a1=0.14311324240262455, b1=26.97369198989023,
 
         Args:
             j (`int`): number of variants
             a1 (`float`): shape parameter of a gamma distribution
             b1 (`float`): scale parameter of a gamma distribution
+            n (`float`): number of samples
+            clip (`boolean`): perform clipping based on the current sample-size.
+            seed (`int`): random seed.
+            test (`string`): type of test to be performed (SKAT, Calpha, Hotelling)
+        Returns:
+            ws (`np.array`): array of weights per-variant.
+            ps (`np.array`): array of allele frequencies.
 
         """
         assert j > 0
         assert a1 > 0
         assert b1 > 0
-        ps = gamma.rvs(a1, scale=1 / b1, size=j)
-        return ps
+        assert n > 0
+        assert seed > 0
+        assert test in ["SKAT", "Calpha", "Hotelling"]
+        np.random.seed(seed)
+        ps = beta.rvs(a1, scale=1 / b1, size=j, random_state=seed)
+        if clip:
+            ps = np.clip(ps, 1.0 / n, (1 - 1.0 / n))
+        if test == "SKAT":
+            ws = beta.pdf(ps, 1.0, 1.0) ** 2
+        elif test == "Calpha":
+            ws = beta.pdf(ps, 1.0, 25.0) ** 2
+        elif test == "Hotelling":
+            ws = beta.pdf(ps, 0.5, 0.5) ** 2
+        return ws, ps
+
+    def sim_var_per_gene(self, a=1.47, b=0.0108, seed=42):
+        """Simulate the number of variants per-gene.
+
+        Paramter values are derived from GnomAD Exonic variants on Chromosome 4 from ~15730 AFR ancestry subjects.
+
+        For a Non-Finnish European ancestry setting with larger sample size (~112350), use a=1.44306, b=0.00372.
+
+        Args:
+            a (`float`):  shape parameter for a gamma distribution
+            b (`float`): scale parameter for a gamma distribution
+            seed (`int`): random seed.
+
+        Returns:
+            nvar (`int`): number of variants per-gene.
+
+        """
+        assert a > 0
+        assert b > 0
+        assert seed > 0
+        nvar = gamma.rvs(a, scale=1 / b, random_state=seed)
+        nvar = np.round(nvar).astype("int")
+        if nvar <= 1:
+            nvar = 1
+        return nvar
 
 
 class RareVariantBurdenPower(RareVariantPower):
@@ -161,7 +210,7 @@ class RareVariantVCPower(RareVariantPower):
             ncp = s1 * a**3 - a**2
             df = a**2 - 2 * ncp
         else:
-            ncp = 0
+            ncp = 0.0
             df = c2**3 / c3**2
         return df, ncp
 
