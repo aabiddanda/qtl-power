@@ -1,8 +1,10 @@
 """Testing module for GWAS power calculations."""
 from hypothesis import assume, given
 from hypothesis import strategies as st
+from hypothesis.extra.numpy import arrays
 
-from qtl_power.rare_variants import RareVariantBurdenPower, RareVariantPower
+from qtl_power.rare_variants import (RareVariantBurdenPower, RareVariantPower,
+                                     RareVariantVCPower)
 
 
 @given(
@@ -16,7 +18,7 @@ from qtl_power.rare_variants import RareVariantBurdenPower, RareVariantPower
     ),
 )
 def test_llr_power(a, d, ncp, ncp0):
-    """Test calculation of log-likelihood ratio calculation."""
+    """Test calculation of log-likelihood ratio power."""
     obj = RareVariantPower()
     obj.llr_power(alpha=a, df=d, ncp=ncp, ncp0=ncp0)
 
@@ -47,6 +49,30 @@ def test_sim_af_weights(j, a1, b1):
 
 
 @given(
+    a=st.floats(
+        min_value=0,
+        max_value=1e6,
+        exclude_min=True,
+        allow_infinity=False,
+        allow_nan=False,
+    ),
+    b=st.floats(
+        min_value=0,
+        max_value=1e6,
+        exclude_min=True,
+        allow_infinity=False,
+        allow_nan=False,
+    ),
+    seed=st.integers(min_value=1, max_value=1000000),
+)
+def test_sim_var_per_gene(a, b, seed):
+    """Test of simulating variants per-gene."""
+    obj = RareVariantPower()
+    nvar = obj.sim_var_per_gene(a=a, b=b, seed=seed)
+    assert nvar > 0
+
+
+@given(
     n=st.integers(min_value=1),
     j=st.integers(min_value=100, max_value=100000),
     jd=st.integers(min_value=0, max_value=50),
@@ -65,3 +91,22 @@ def test_ncp_burden_test_model1(n, j, jd, jp, tev):
     assume(jd + jp > 0)
     obj = RareVariantBurdenPower()
     obj.ncp_burden_test_model1(n=n, j=j, jd=jd, jp=jp, tev=tev)
+
+
+@given(
+    n=st.integers(min_value=1),
+    ws=arrays(dtype=float, shape=100, elements=st.floats(0, 1)),
+    ps=arrays(dtype=float, shape=100, elements=st.floats(0, 1)),
+    tev=st.floats(
+        min_value=0,
+        max_value=1,
+        exclude_min=True,
+        exclude_max=True,
+        allow_infinity=False,
+        allow_nan=False,
+    ),
+)
+def test_ncp_vc_first_order_model1(ws, ps, n, tev):
+    """XXX."""
+    obj = RareVariantVCPower()
+    obj.ncp_vc_first_order_model1(ws=ws, ps=ps, n=n, tev=tev)
