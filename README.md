@@ -41,3 +41,4 @@ All of the results
 
 * Matti Pirinen [(GWAS Course Notes)](https://www.mv.helsinki.fi/home/mjxpirin/GWAS_course/material/GWAS3.html)
 * Andriy Derkach, Haoyu Zhang, Nilanjan Chatterjee, Power Analysis for Genetic Association Test (PAGEANT) provides insights to challenges for rare variant association studies, Bioinformatics, Volume 34, Issue 9, 01 May 2018, Pages 1506–1513, [https://doi.org/10.1093/bioinformatics/btx770](https://doi.org/10.1093/bioinformatics/btx770)
+* Jennifer Li Johnson, Goncalo Abecasis [GAS Calculator](https://github.com/jenlij/GAS-power-calculator/blob/master/equations_gas_power_calc.pdf)

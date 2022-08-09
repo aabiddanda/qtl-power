@@ -1,4 +1,5 @@
 """Testing module for GWAS power calculations."""
+import numpy as np
 from hypothesis import given
 from hypothesis import strategies as st
 
@@ -172,3 +173,4 @@ def test_binary_trait_power_model(n, p, model, prev, alpha, prop_cases):
     power = obj.binary_trait_power_model(
         n=n, p=p, model=model, prev=prev, alpha=alpha, prop_cases=prop_cases
     )
+    assert np.isnan(power) or ((power >= 0) & (power <= 1))
