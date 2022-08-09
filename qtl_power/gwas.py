@@ -168,3 +168,46 @@ class GwasBinary(GWAS):
         except (OverflowError, ValueError):
             opt_beta = np.nan
         return opt_beta
+
+    def ncp_binary_model(
+        self,
+        n=100,
+        p=0.1,
+        beta=0.1,
+        model="additive",
+        prev=0.01,
+        alpha=5e-8,
+        prop_cases=0.5,
+    ):
+        """Explore how multiple models affect power in case-control traits."""
+        assert (prev > 0) & (prev < 1.0)
+        assert n > 0
+        assert (p > 0) & (p < 1)
+        if model == "additive":
+            x = np.array([1.0 + 2 * beta, 1.0 + beta, 1.0])
+        elif model == "dominant":
+            x = np.array([1.0 + beta, 1.0 + beta, 1.0])
+        elif model == "recessive":
+            x = np.array([1.0 + beta, 1.0, 1.0])
+        else:
+            raise ValueError(
+                f"Model should be additive|dominant|recessive, not {model}"
+            )
+
+        n_cases = n * prop_cases
+        n_control = n * (1.0 - prop_cases)
+        af = np.array([p**2, 2 * p * (1.0 - p), (1 - p) ** 2])
+        denom = (x * af).sum()
+        aa_prob = x[0] * prev / denom
+        ab_prob = x[1] * prev / denom
+        # bb_prob = x[2] * prev / denom
+        case_af = (aa_prob * af[0] + ab_prob * af[1] * 0.5) / prev
+        control_af = ((1.0 - aa_prob) * af[0] + (1.0 - ab_prob) * af[1] * 0.5) / (
+            1.0 - prev
+        )
+        v_cases = case_af * (1.0 - case_af)
+        v_control = control_af * (1.0 - control_af)
+        ncp = case_af - control_af / (
+            np.sqrt((v_cases / n_cases + v_control / n_control) * 0.5)
+        )
+        return ncp
