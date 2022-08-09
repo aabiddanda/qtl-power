@@ -149,6 +149,7 @@ class GwasBinary(GWAS):
             r2 (`float`): correlation r2 between causal variant and tag variant.
             alpha (`float`): p-value threshold for detection.
             prop_cases (`float`): proportion of samples that are cases.
+
         Returns:
             ncp  (`float`): non-centrality parameter.
 
@@ -211,3 +212,76 @@ class GwasBinary(GWAS):
             np.sqrt((v_cases / n_cases + v_control / n_control) * 0.5)
         )
         return ncp
+
+    def binary_trait_power_model(
+        self,
+        n=100,
+        p=0.1,
+        beta=0.1,
+        model="additive",
+        prev=0.01,
+        alpha=5e-8,
+        prop_cases=0.5,
+    ):
+        """Power under a case-control GWAS study design.
+
+        Args:
+            n (`int`): sample-size of unrelated individuals.
+            p (`float`): minor allele frequency of variant.
+            beta (`float`): effect-size of variant (in terms of relative-risk).
+            model (`string`): genetic model for effects (additive, recessive, or dominant).
+            prev (`float`): prevalence of the trait in question.
+            alpha (`float`): p-value threshold for detection.
+            prop_cases (`float`): proportion of samples that are cases.
+
+        Returns:
+            power (`float`): power under the model.
+
+        """
+        ncp = self.ncp_binary_model(n, p, beta, model, prev, alpha, prop_cases)
+        return self.llr_power(alpha, df=1, ncp=ncp)
+
+    def binary_trait_beta_power_model(
+        self,
+        n=100,
+        p=0.1,
+        model="additive",
+        prev=0.01,
+        alpha=5e-8,
+        prop_cases=0.5,
+        power=0.90,
+    ):
+        """Threshold effects under a specific power threshold and genetic model.
+
+        Args:
+            n (`int`): sample-size of unrelated individuals.
+            p (`float`): minor allele frequency of variant.
+            beta (`float`): effect-size of variant (in terms of relative-risk).
+            model (`string`): genetic model for effects (additive, recessive, or dominant).
+            prev (`float`): prevalence of the trait in question.
+            alpha (`float`): p-value threshold for detection.
+            prop_cases (`float`): proportion of samples that are cases.
+            power (`float`): power under the model.
+
+        Returns:
+            opt_beta (`float`): detectable effect-size at the power threshold and model.
+
+        """
+        assert (power >= 0) & (power <= 1)
+        f = (
+            lambda beta: self.binary_trait_power_model(
+                n=n,
+                p=p,
+                beta=beta,
+                model=model,
+                prev=prev,
+                prop_cases=prop_cases,
+                alpha=alpha,
+            )
+            - power
+        )
+        try:
+            opt_beta = brentq(f, 0.0, 1e3)
+        except (OverflowError, ValueError):
+            opt_beta = np.nan
+        return opt_beta
