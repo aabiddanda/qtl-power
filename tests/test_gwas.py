@@ -126,3 +126,49 @@ def test_binary_trait_beta_power(n, p, power, r2, alpha, prop_cases):
     """Test the function to obtain power under a quantitative model."""
     obj = GwasBinary()
     obj.binary_trait_beta_power(n=n, p=p, power=power, r2=r2, alpha=alpha)
+
+
+@given(
+    n=st.integers(min_value=10),
+    p=st.floats(min_value=1e-4, max_value=0.5),
+    model=st.sampled_from(["additive", "recessive", "dominant"]),
+    prev=st.floats(min_value=0, max_value=0.5, exclude_min=True),
+    alpha=st.floats(exclude_min=True, exclude_max=True, min_value=1e-32, max_value=0.5),
+    prop_cases=st.floats(
+        min_value=0.0,
+        max_value=1.0,
+        exclude_min=True,
+        exclude_max=True,
+        allow_infinity=False,
+        allow_nan=False,
+    ),
+)
+def test_ncp_binary_model(n, p, model, prev, alpha, prop_cases):
+    """Test NCP generation under different genetic models."""
+    obj = GwasBinary()
+    obj.ncp_binary_model(
+        n=n, p=p, model=model, prev=prev, alpha=alpha, prop_cases=prop_cases
+    )
+
+
+@given(
+    n=st.integers(min_value=10),
+    p=st.floats(min_value=1e-4, max_value=0.5),
+    model=st.sampled_from(["additive", "recessive", "dominant"]),
+    prev=st.floats(min_value=0, max_value=0.5, exclude_min=True),
+    alpha=st.floats(exclude_min=True, exclude_max=True, min_value=1e-32, max_value=0.5),
+    prop_cases=st.floats(
+        min_value=0.0,
+        max_value=1.0,
+        exclude_min=True,
+        exclude_max=True,
+        allow_infinity=False,
+        allow_nan=False,
+    ),
+)
+def test_binary_trait_power_model(n, p, model, prev, alpha, prop_cases):
+    """Test NCP generation under different genetic models."""
+    obj = GwasBinary()
+    power = obj.binary_trait_power_model(
+        n=n, p=p, model=model, prev=prev, alpha=alpha, prop_cases=prop_cases
+    )
