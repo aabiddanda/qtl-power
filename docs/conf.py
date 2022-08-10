@@ -12,7 +12,7 @@ sys.path.insert(0, os.path.abspath(".."))
 
 project = "qtl-power"
 copyright = "2022, Arjun Biddanda"
-author = "Arjun Biddanda"
+author = "Arjun Biddanda, 54gene"
 release = "0.0.1a"
 
 # -- General configuration ---------------------------------------------------
