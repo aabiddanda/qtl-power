@@ -8,3 +8,4 @@ max-complexity = 10
 
 ########## RULES ##########
 ignore = D102,D103,E265,E731,W503
+exclude = .git,__pycache__,docs/conf.py,old,build,dist

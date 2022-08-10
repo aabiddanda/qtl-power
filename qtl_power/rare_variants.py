@@ -2,7 +2,7 @@
 
 import numpy as np
 from scipy.optimize import brentq
-from scipy.stats import gamma, ncx2
+from scipy.stats import beta, gamma, ncx2
 
 
 class RareVariantPower:
@@ -26,26 +26,75 @@ class RareVariantPower:
 
         """
         assert df > 0
-        assert (alpha < 1.0) & (alpha > 0)
+        assert (alpha > 0) & (alpha < 1)
         return 1.0 - ncx2.cdf(ncx2.ppf(1.0 - alpha, df, ncp0), df, ncp)
 
-    def sim_af_weights(self, j=100, a1=1.0, b1=1.0):
-        """Simulate allele frequencies from a gamma distribution.
+    def sim_af_weights(
+        self, j=100, a1=0.1846, b1=11.1248, n=100, clip=True, seed=42, test="SKAT"
+    ):
+        """Simulate allele frequencies from a beta distribution.
 
-        Ideally the gamma distribution is derived from realized catalogues of variation.
+        Ideally the beta distribution is derived from realized catalogues of variation.
+        The current parameters are based on 15k African ancestry individuals.
+        For mimicing a much larger set (112k) of Non-Finnish European individuals,
+        use the parameters a1=0.14311324240262455, b1=26.97369198989023,
 
         Args:
             j (`int`): number of variants
             a1 (`float`): shape parameter of a gamma distribution
             b1 (`float`): scale parameter of a gamma distribution
+            n (`float`): number of samples
+            clip (`boolean`): perform clipping based on the current sample-size.
+            seed (`int`): random seed.
+            test (`string`): type of test to be performed (SKAT, Calpha, Hotelling)
+
+        Returns:
+            ws (`np.array`): array of weights per-variant.
+            ps (`np.array`): array of allele frequencies.
 
         """
         assert j > 0
         assert a1 > 0
         assert b1 > 0
-        ps = gamma.rvs(a1, scale=1 / b1, size=j)
-        return ps
+        assert n > 0
+        assert seed > 0
+        assert test in ["SKAT", "Calpha", "Hotelling"]
+        np.random.seed(seed)
+        ps = beta.rvs(a1, b1, size=j, random_state=seed)
+        if clip:
+            ps = np.clip(ps, 1.0 / n, (1 - 1.0 / n))
+        if test == "SKAT":
+            ws = beta.pdf(ps, 1.0, 1.0) ** 2
+        elif test == "Calpha":
+            ws = beta.pdf(ps, 1.0, 25.0) ** 2
+        elif test == "Hotelling":
+            ws = beta.pdf(ps, 0.5, 0.5) ** 2
+        return ws, ps
 
+    def sim_var_per_gene(self, a=1.47, b=0.0108, seed=42):
+        """Simulate the number of variants per-gene.
+
+        Paramter values are derived from GnomAD Exonic variants on Chromosome 4 from ~15730 AFR ancestry subjects.
+
+        For a Non-Finnish European ancestry setting with larger sample size (~112350), use a=1.44306, b=0.00372.
+
+        Args:
+            a (`float`):  shape parameter for a gamma distribution
+            b (`float`): scale parameter for a gamma distribution
+            seed (`int`): random seed.
+
+        Returns:
+            nvar (`int`): number of variants per-gene.
+
+        """
+        assert a > 0
+        assert b > 0
+        assert seed > 0
+        nvar = gamma.rvs(a, scale=1 / b, random_state=seed)
+        nvar = np.round(nvar).astype("int")
+        if nvar <= 1:
+            nvar = 1
+        return nvar
 
 class RareVariantBurdenPower(RareVariantPower):
     """Approximation of power for rare-variant burden tests based on results from Derkach et al (2018)."""
@@ -54,11 +103,10 @@ class RareVariantBurdenPower(RareVariantPower):
         """Initialize the power calculator for the burden tests."""
         super(RareVariantBurdenPower, self).__init__()
 
-    def ncp_burden_test_model1(self, n=100, j=30, jd=10, jp=10, tev=0.1):
+    def ncp_burden_test_model1(self, n=100, j=30, jd=10, jp=0, tev=0.1):
         """Approximation of the non-centrality parameter under model S1 from Derkach et al.
 
         The key assumption in this case is that there is independence between an alleles effect-size and its MAF.
-        This is also known in the literature as the alpha=0 model.
 
         Args:
             n (`int`): total sample size
@@ -100,8 +148,9 @@ class RareVariantBurdenPower(RareVariantPower):
         """
         assert ws.size == ps.size
         assert n > 0
-        assert jd > 0
-        assert jp > 0
+        assert jd >= 0
+        assert jp >= 0
+        assert jd + jp > 0
         assert (tev > 0) & (tev < 1.0)
         j = ws.size
         sum_weights = np.sum((ws**2) * (ps**2) * (1.0 - ps))
@@ -140,6 +189,10 @@ class RareVariantVCPower(RareVariantPower):
             c2 (`float`): second cumulant of non-central chi-squared dist.
             c3 (`float`): third cumulant of non-central chi-squared dist.
             c4 (`float`): fourth cumulant of non-central chi-squared dist.
+        
+        Returns:
+            df (`int`): degrees of freedom for test.
+            ncp (`float`): non-centrality parameter.
 
         """
         s1 = c3 / c2 ** (3 / 2)
@@ -194,6 +247,10 @@ class RareVariantVCPower(RareVariantPower):
            power (`float`): estimated power under this variance component model.
 
         """
+        assert ws.ndim == 1
+        assert ps.ndim == 1
+        assert n > 1
+        assert tev
         ncp0 = self.ncp_vc_first_order_model1(ws, ps, n, 0.0)
         ncp = self.ncp_vc_first_order_model1(ws, ps, n, tev)
         return self.llr_power(df=df, ncp0=ncp0, ncp=ncp, alpha=alpha)
@@ -207,8 +264,8 @@ class RareVariantVCPower(RareVariantPower):
             ws (`np.array`): numpy array of weights per-variant
             ps (`np.array`): numpy array of allele frequencies
             n (`int`): sample size (N)
-            power (`float`): set level of power to det
-            alpha (`float`): level of significance for
+            power (`float`): set level of power to determine impact.
+            alpha (`float`): level of significance for the rare-variant test
             df (`int`): degrees of freedom for test
 
         Returns:
