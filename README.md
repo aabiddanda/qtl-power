@@ -1,41 +1,26 @@
 # Power Calculation Routines for GWAS Study Design
 
-## GWAS Power Calculations
+## Installation
 
-In the context of GWAS and detection power, we are interested in a number of questions that each can be encapsulated by a specific plot:
+If you are interested in installing this package for direct use within scripts or notebooks, please run:
 
-1. What is the sample-size required to detect a causal effect of this size at a given minor allele frequency (MAF)?
-2. What effect-size is detectable at a specific power level (e.g. 80% power) with a given sample size?
+```
+git clone https://gitlab.com/data-analysis5/qtl-power.git
+cd qtl-power
+pip install .
+```
 
-These questions can subsequently be used for asking more layered questions for study design, such as at what MAF regimes will one study be more strongly powered over another.
+to install directly from source.
 
-### Key Parameters
+## Interactive Exploration via Notebooks
 
-* Effect-Size
-* Sample Size (N)
-* MAF (minor allele frequency)
-* Imputation r2 (default r2 > 0.95)
-
-For Case/Control traits, the proportion of cases is also required for the power claculations.
-
-## Rare-Variant Association Power Calculations
-
-Rare variant association tests are often designed to overcome the lack of power for association at individual variants by aggregating variants across a region (e.g. a gene). The two primary tests are "Burden" tests, which are well-powered well all of the effects in a gene are in the same direction on a trait, and "Variance Component" tests, which are powerful when the rare effects drive larger variance in the trait.
-
-In order to appropriately account for variation in the number of exonic variation across genes, and the frequency of those variants we resample both of these quantities from distributions fit to the MLE of a normal distribution and a gamma distribution repectively on Chromosome 4 of the GnomeAD data Release. These are the default parameters used throughout the notebooks and represent a reasonable approximation.
-
-All of the results
-
-### Key Parameters
-
-* J: number of variants
-* MAF: vector of minor allele frequency
-* TEV: total explained variance
+If you are primarily interested in a more interactive experience, you can immediately use several of our pre-built notebooks via the [`mybinder`](https://mybinder.org/v2/gl/data-analysis5%2Fqtl-power/default?labpath=notebooks%2F) link above. This will allow you to use the library to generate commonly used plots for comparing power for genetic association based on mutliple input parameters.
 
 
-## Cis / Trans QTL Power Calculations & Differential Expression Power
+## Documentation
 
-**TODO: need to specify this.**
+**TBD: read the docs will be incoming**
+
 
 ## References
 
