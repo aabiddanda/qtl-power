@@ -101,6 +101,33 @@ def test_ncp_burden_test_model1(n, j, jd, jp, tev):
         shape=100,
         elements=st.floats(1e-8, 1 - 1e-8, allow_nan=False, allow_infinity=False),
     ),
+    jd=st.integers(min_value=0, max_value=50),
+    jp=st.integers(min_value=0, max_value=50),
+    tev=st.floats(
+        min_value=0,
+        max_value=1,
+        exclude_min=True,
+        exclude_max=True,
+        allow_infinity=False,
+        allow_nan=False,
+    ),
+)
+def test_ncp_burden_test_model2(ws, ps, jd, jp, n, tev):
+    """Test estimation of NCP in second model for rv burden."""
+    assume(jd + jp > 0)
+    assume(ws.sum() > 0)
+    obj = RareVariantBurdenPower()
+    obj.ncp_burden_test_model2(ws=ws, ps=ps, jd=jd, jp=jp, n=n, tev=tev)
+
+
+@given(
+    n=st.integers(min_value=1, max_value=1000000),
+    ws=arrays(dtype=float, shape=100, elements=st.floats(0, 100)),
+    ps=arrays(
+        dtype=float,
+        shape=100,
+        elements=st.floats(1e-8, 1 - 1e-8, allow_nan=False, allow_infinity=False),
+    ),
     tev=st.floats(
         min_value=0,
         max_value=1,
@@ -115,3 +142,61 @@ def test_ncp_vc_first_order_model1(ws, ps, n, tev):
     assume(ws.sum() > 0)
     obj = RareVariantVCPower()
     obj.ncp_vc_first_order_model1(ws=ws, ps=ps, n=n, tev=tev)
+
+
+@given(
+    n=st.integers(min_value=1, max_value=1000000),
+    ws=arrays(dtype=float, shape=100, elements=st.floats(0, 100)),
+    ps=arrays(
+        dtype=float,
+        shape=100,
+        elements=st.floats(1e-8, 1 - 1e-8, allow_nan=False, allow_infinity=False),
+    ),
+    tev=st.floats(
+        min_value=0,
+        max_value=1,
+        exclude_min=True,
+        exclude_max=True,
+        allow_infinity=False,
+        allow_nan=False,
+    ),
+    alpha=st.floats(
+        1e-32, 0.5, exclude_max=True, allow_nan=False, allow_infinity=False
+    ),
+    df=st.integers(1, 100),
+)
+def test_power_vc_first_order_model1(ws, ps, n, tev, alpha, df):
+    """Test estimation of the NCP in a rare-variant model."""
+    assume(ws.sum() > 0)
+    obj = RareVariantVCPower()
+    obj.power_vc_first_order_model1(ws=ws, ps=ps, n=n, tev=tev, alpha=alpha, df=df)
+
+
+@given(
+    n=st.integers(min_value=1, max_value=1000000),
+    ws=arrays(dtype=float, shape=100, elements=st.floats(0, 100)),
+    ps=arrays(
+        dtype=float,
+        shape=100,
+        elements=st.floats(1e-8, 1 - 1e-8, allow_nan=False, allow_infinity=False),
+    ),
+    power=st.floats(
+        min_value=0.5,
+        max_value=1.0,
+        exclude_min=True,
+        exclude_max=True,
+        allow_infinity=False,
+        allow_nan=False,
+    ),
+    alpha=st.floats(
+        1e-32, 0.5, exclude_max=True, allow_nan=False, allow_infinity=False
+    ),
+    df=st.integers(1, 100),
+)
+def test_effect_size_vc_first_order_model1(ws, ps, n, power, alpha, df):
+    """Testing the estimation of minimal detectable effect-size under a rare-variant model."""
+    assume(ws.sum() > 0)
+    obj = RareVariantVCPower()
+    obj.effect_size_vc_first_order_model1(
+        ws=ws, ps=ps, n=n, power=power, alpha=alpha, df=df
+    )

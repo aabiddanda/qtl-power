@@ -1,5 +1,6 @@
 stages:
   - pytest
+  - install
 
 workflow:
   rules:
@@ -14,3 +15,9 @@ run_pytest:
     - pip install hypothesis
     - "pytest --cov | awk '/^TOTAL/ {print $4}' | sed 's/%//' | awk '{print \"Final coverage: \"$0}'"
   coverage: '/Final coverage: \d+\.?\d*/'
+
+run install:
+  stage: install
+  image: cpalmer718/snakemake-gcc
+  script:
+    - pip install .
