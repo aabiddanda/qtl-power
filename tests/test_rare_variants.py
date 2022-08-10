@@ -101,6 +101,33 @@ def test_ncp_burden_test_model1(n, j, jd, jp, tev):
         shape=100,
         elements=st.floats(1e-8, 1 - 1e-8, allow_nan=False, allow_infinity=False),
     ),
+    jd=st.integers(min_value=0, max_value=50),
+    jp=st.integers(min_value=0, max_value=50),
+    tev=st.floats(
+        min_value=0,
+        max_value=1,
+        exclude_min=True,
+        exclude_max=True,
+        allow_infinity=False,
+        allow_nan=False,
+    ),
+)
+def test_ncp_burden_test_model2(ws, ps, jd, jp, n, tev):
+    """Test estimation of NCP in second model for rv burden."""
+    assume(jd + jp > 0)
+    assume(ws.sum() > 0)
+    obj = RareVariantBurdenPower()
+    obj.ncp_burden_test_model2(ws=ws, ps=ps, jd=jd, jp=jp, n=n, tev=tev)
+
+
+@given(
+    n=st.integers(min_value=1, max_value=1000000),
+    ws=arrays(dtype=float, shape=100, elements=st.floats(0, 100)),
+    ps=arrays(
+        dtype=float,
+        shape=100,
+        elements=st.floats(1e-8, 1 - 1e-8, allow_nan=False, allow_infinity=False),
+    ),
     tev=st.floats(
         min_value=0,
         max_value=1,
