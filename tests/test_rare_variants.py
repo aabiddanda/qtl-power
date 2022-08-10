@@ -94,9 +94,13 @@ def test_ncp_burden_test_model1(n, j, jd, jp, tev):
 
 
 @given(
-    n=st.integers(min_value=1),
-    ws=arrays(dtype=float, shape=100, elements=st.floats(0, 1)),
-    ps=arrays(dtype=float, shape=100, elements=st.floats(0, 1)),
+    n=st.integers(min_value=1, max_value=1000000),
+    ws=arrays(dtype=float, shape=100, elements=st.floats(0, 100)),
+    ps=arrays(
+        dtype=float,
+        shape=100,
+        elements=st.floats(1e-8, 1 - 1e-8, allow_nan=False, allow_infinity=False),
+    ),
     tev=st.floats(
         min_value=0,
         max_value=1,
@@ -107,6 +111,7 @@ def test_ncp_burden_test_model1(n, j, jd, jp, tev):
     ),
 )
 def test_ncp_vc_first_order_model1(ws, ps, n, tev):
-    """XXX."""
+    """Test estimation of the NCP in a rare-variant model."""
+    assume(ws.sum() > 0)
     obj = RareVariantVCPower()
     obj.ncp_vc_first_order_model1(ws=ws, ps=ps, n=n, tev=tev)
