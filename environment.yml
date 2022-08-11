@@ -1,9 +1,12 @@
 name: qtl_power
 channels:
   - conda-forge
+  - defaults
 dependencies:
-  - numpy
-  - scipy
-  - pandas
-  - matplotlib
-  - tqdm
+  - pip
+  - pip:
+    - numpy
+    - scipy
+    - pandas
+    - matplotlib
+    - tqdm
