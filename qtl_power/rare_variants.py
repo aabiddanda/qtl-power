@@ -214,10 +214,10 @@ class RareVariantVCPower(RareVariantPower):
         The key assumption is independence between an alleles effect-size and its MAF, from Table S1 in Derkach et al.
 
         Args:
-            ws (`np.array`): numpy array of weights per-variant
-            ps (`np.array`): numpy array of allele frequencies
-            n (`int`): sample size
-            tev (`float`): total explained variance by a locus
+            ws (`np.array`): numpy array of weights per-variant.
+            ps (`np.array`): numpy array of allele frequencies.
+            n (`int`): sample size.
+            tev (`float`): total explained variance by a locus.
 
         Returns:
            ncp (`float`): non-centrality parameter
