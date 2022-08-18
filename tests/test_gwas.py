@@ -1,7 +1,7 @@
 """Testing module for GWAS power calculations."""
 import numpy as np
 import pytest
-from hypothesis import given
+from hypothesis import given, settings
 from hypothesis import strategies as st
 
 from qtl_power.gwas import Gwas, GwasBinary, GwasBinaryModel, GwasQuant
@@ -69,6 +69,7 @@ def test_quant_trait_beta_power(n, p, power, r2, alpha):
     r2=st.floats(min_value=0.5, max_value=1.0),
     alpha=st.floats(exclude_min=True, exclude_max=True, min_value=1e-32, max_value=0.5),
 )
+@settings(deadline=None, max_examples=200)
 def test_quant_trait_opt_n(p, power, r2, alpha):
     """Test estimation of optimal sample-size under a quantitative model."""
     obj = GwasQuant()
@@ -132,6 +133,7 @@ def test_binary_trait_power(n, p, beta, r2, alpha, prop_cases):
         allow_nan=False,
     ),
 )
+@settings(deadline=None, max_examples=200)
 def test_binary_trait_beta_power(n, p, power, r2, alpha, prop_cases):
     """Test the function to obtain power under a quantitative model."""
     obj = GwasBinary()
@@ -152,6 +154,7 @@ def test_binary_trait_beta_power(n, p, power, r2, alpha, prop_cases):
         allow_nan=False,
     ),
 )
+@settings(deadline=None, max_examples=200)
 def test_binary_trait_opt_n(p, power, r2, alpha, prop_cases):
     """Test the function to obtain power under a quantitative model."""
     obj = GwasBinary()

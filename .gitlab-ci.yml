@@ -12,7 +12,7 @@ run_pytest:
   image: cpalmer718/snakemake-gcc
   script:
     - pip install hypothesis pytest-cov pytest-xdist
-    - "pytest --cov | awk '/^TOTAL/ {print $4}' | sed 's/%//' | awk '{print \"Final coverage: \"$0}'"
+    - "pytest -n auto --cov | awk '/^TOTAL/ {print $4}' | sed 's/%//' | awk '{print \"Final coverage: \"$0}'"
   coverage: '/Final coverage: \d+\.?\d*/'
 
 run install:
