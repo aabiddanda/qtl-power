@@ -228,3 +228,34 @@ def test_binary_trait_power_model(n, p, model, prev, alpha, prop_cases):
         n=n, p=p, model=model, prev=prev, alpha=alpha, prop_cases=prop_cases
     )
     assert np.isnan(power) or ((power >= 0) & (power <= 1))
+
+
+@given(
+    n=st.integers(min_value=10),
+    p=st.floats(min_value=1e-4, max_value=0.5),
+    model=st.sampled_from(["additive", "recessive", "dominant"]),
+    prev=st.floats(min_value=1e-4, max_value=0.5, exclude_min=True),
+    alpha=st.floats(exclude_min=True, exclude_max=True, min_value=1e-32, max_value=0.5),
+    power=st.floats(min_value=0.5, max_value=1, exclude_max=True),
+    prop_cases=st.floats(
+        min_value=1e-3,
+        max_value=0.5,
+        allow_infinity=False,
+        allow_nan=False,
+    ),
+)
+@settings(deadline=None, max_examples=200)
+def test_binary_trait_beta_power_model(n, p, model, prev, alpha, prop_cases, power):
+    """Test effect-size estimate for different models and power."""
+    obj = GwasBinaryModel()
+    opt_beta = obj.binary_trait_beta_power_model(
+        n=n,
+        p=p,
+        model=model,
+        prev=prev,
+        alpha=alpha,
+        prop_cases=prop_cases,
+        power=power,
+    )
+    if ~np.isnan(opt_beta):
+        assert opt_beta >= 0
