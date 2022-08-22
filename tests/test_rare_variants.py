@@ -43,11 +43,12 @@ def test_llr_power(a, d, ncp, ncp0):
         allow_infinity=False,
         allow_nan=False,
     ),
+    test=st.sampled_from(["SKAT", "Calpha", "Hotelling"]),
 )
-def test_sim_af_weights(j, a1, b1):
+def test_sim_af_weights(j, a1, b1, test):
     """Test of allele frequency weight calculation."""
     obj = RareVariantPower()
-    ws, ps = obj.sim_af_weights(j=j, a1=a1, b1=b1)
+    ws, ps = obj.sim_af_weights(j=j, a1=a1, b1=b1, test=test)
     assert ws.size == j
     assert ps.size == j
 

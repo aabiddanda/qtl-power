@@ -67,7 +67,7 @@ class RareVariantPower:
             ws = beta.pdf(ps, 1.0, 1.0) ** 2
         elif test == "Calpha":
             ws = beta.pdf(ps, 1.0, 25.0) ** 2
-        elif test == "Hotelling":
+        else:
             ws = beta.pdf(ps, 0.5, 0.5) ** 2
         return ws, ps
 
@@ -171,15 +171,15 @@ class RareVariantBurdenPower(RareVariantPower):
             est_power[i] = self.power_burden_model1(n=n, j=j, **kwargs)
         return est_power
 
-    def ncp_burden_test_model2(self, ws, ps, jd=10, jp=0, n=100, tev=0.1):
+    def ncp_burden_test_model2(self, ws, ps, n=100, jd=10, jp=0, tev=0.1):
         """Estimate the non-centrality parameter for burden under Model 2.
 
         Args:
             ws (`np.array`): array of weights for alleles.
             ps (`np.array`): array of variant allele frequencies.
+            n (`int`): sample-size.
             jd (`int`): number of disease variants.
             jp (`int`): number of protective variants.
-            n (`int`): sample-size.
             tev (`int`): total explained variance in trait of locus.
 
         Returns:
@@ -199,9 +199,24 @@ class RareVariantBurdenPower(RareVariantPower):
         return ncp
 
     def power_burden_model2(
-        self, ws, ps, prop_causal=0.8, prop_risk=0.1, n=100, tev=0.1, alpha=1e-6
+        self, ws, ps, n=100, prop_causal=0.8, prop_risk=0.1, tev=0.1, alpha=1e-6
     ):
-        """Estimate power under burden for model 2."""
+        """Estimate power under burden for model 2.
+
+        Args:
+            ws (`np.array`): array of weights for alleles.
+            ps (`np.array`): array of variant allele frequencies.
+            n (`int`): sample-size.
+            prop_causal (`float`): proportion of causal variants.
+            prop_risk (`float`): number of protective variants.
+            tev (`int`): total explained variance in trait of locus.
+            alpha (`float`): p-value threshold for power.
+
+        Returns:
+            power  (`float`): power under model2 for burden test
+
+
+        """
         assert ws.ndim == 1
         assert ws.size == ps.size
         assert (prop_causal > 0.0) & (prop_causal <= 1.0)
@@ -212,6 +227,29 @@ class RareVariantBurdenPower(RareVariantPower):
         jp = jc * (1.0 - prop_risk)
         ncp = self.ncp_burden_test_model2(ws, ps, jd=jd, jp=jp, n=n, tev=tev)
         return self.llr_power(alpha=alpha, ncp=ncp)
+
+    def power_burden_model2_real(self, n=100, nreps=10, test="SKAT", **kwargs):
+        """Estimate power under model 2 with realistic numbers of variants per gene.
+
+        Args:
+            n (`int`): number of samples.
+            nreps (`int`): number of replicates.
+            test (`string`): type of weighting scheme for allele frequencies.
+
+        Returns:
+            est_power (`np.array`): array of power estimates based on realistic number of variants.
+
+        """
+        assert n > 0
+        assert nreps > 0
+        est_power = np.zeros(nreps)
+        for i in range(nreps):
+            # Simulating the number of variants per-gene.
+            j = self.sim_var_per_gene(seed=(i + 1))
+            # Simulating the weights and allele frequencies.
+            ws, ps = self.sim_af_weights(j=j, n=n, clip=True, test=test, seed=(i + 1))
+            est_power[i] = self.power_burden_model2(ws=ws, ps=ps, n=n, j=j, **kwargs)
+        return est_power
 
 
 class RareVariantVCPower(RareVariantPower):
