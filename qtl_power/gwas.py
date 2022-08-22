@@ -4,7 +4,7 @@ from scipy.optimize import brentq
 from scipy.stats import ncx2
 
 
-class GWAS:
+class Gwas:
     """Parent class for GWAS Power calculation."""
 
     def __init__(self):
@@ -25,7 +25,7 @@ class GWAS:
         return 1.0 - ncx2.cdf(ncx2.ppf(1.0 - alpha, df, 0), df, ncp)
 
 
-class GwasQuant(GWAS):
+class GwasQuant(Gwas):
     """Class for power calculations of a GWAS for a quantitative trait."""
 
     def __init__(self):
@@ -90,8 +90,33 @@ class GwasQuant(GWAS):
             opt_beta = np.nan
         return opt_beta
 
+    def quant_trait_opt_n(self, beta=0.1, power=0.90, p=0.1, r2=1.0, alpha=5e-8):
+        """Determine the sample-size required to detect this effect.
 
-class GwasBinary(GWAS):
+        Args:
+            beta (`float`): effect-size of the variant.
+            power (`float`): threshold power level.
+            p (`float`): minor allele frequency of variant.
+            r2 (`float`): correlation r2 between causal variant and tagging variant.
+            alpha (`float`): p-value threshold for GWAS
+
+        Returns:
+            opt_n  (`float`): optimal sample size for detection at this power-level.
+
+        """
+        assert (power >= 0) & (power <= 1)
+        f = (
+            lambda n: self.quant_trait_power(n=n, p=p, r2=r2, beta=beta, alpha=alpha)
+            - power
+        )
+        try:
+            opt_n = brentq(f, 1.0, 1e24)
+        except (OverflowError, ValueError):
+            opt_n = np.nan
+        return opt_n
+
+
+class GwasBinary(Gwas):
     """GWAS Power calculator for Case/Control study design."""
 
     def __init__(self):
@@ -169,6 +194,36 @@ class GwasBinary(GWAS):
         except (OverflowError, ValueError):
             opt_beta = np.nan
         return opt_beta
+
+    def binary_trait_opt_n(
+        self, beta=0.1, power=0.90, p=0.1, r2=1.0, alpha=5e-8, prop_cases=0.5
+    ):
+        """Determine the sample-size required to detect this effect.
+
+        Args:
+            beta (`float`): effect-size of the variant.
+            power (`float`): threshold power level.
+            p (`float`): minor allele frequency of variant.
+            r2 (`float`): correlation r2 between causal variant and tagging variant.
+            alpha (`float`): p-value threshold for GWAS
+            prop_cases (`float`): proportion of cases in the dataset
+
+        Returns:
+            opt_n  (`float`): optimal sample size for detection at this power-level.
+
+        """
+        assert (power >= 0) & (power <= 1)
+        f = (
+            lambda n: self.binary_trait_power(
+                n=n, p=p, r2=r2, beta=beta, alpha=alpha, prop_cases=prop_cases
+            )
+            - power
+        )
+        try:
+            opt_n = brentq(f, 1.0, 1e24)
+        except (OverflowError, ValueError):
+            opt_n = np.nan
+        return opt_n
 
     def ncp_binary_model(
         self,

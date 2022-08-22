@@ -1,4 +1,5 @@
 """Testing module for GWAS power calculations."""
+import numpy as np
 from hypothesis import assume, given
 from hypothesis import strategies as st
 from hypothesis.extra.numpy import arrays
@@ -20,7 +21,10 @@ from qtl_power.rare_variants import (RareVariantBurdenPower, RareVariantPower,
 def test_llr_power(a, d, ncp, ncp0):
     """Test calculation of log-likelihood ratio power."""
     obj = RareVariantPower()
-    obj.llr_power(alpha=a, df=d, ncp=ncp, ncp0=ncp0)
+    power = obj.llr_power(alpha=a, df=d, ncp=ncp, ncp0=ncp0)
+    if ~np.isnan(power):
+        assert power >= 0
+        assert power <= 1.0
 
 
 @given(
