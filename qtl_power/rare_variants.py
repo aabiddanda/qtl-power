@@ -135,9 +135,10 @@ class RareVariantBurdenPower(RareVariantPower):
         Args:
             n (`int`): total sample size.
             j (`int`): total number of variants in the gene.
-            jd (`int`): number of disease variants in the gene.
-            jp (`int`): number of protective variants in the gene.
+            prop_causal (`float`): proportion of causal variants.
+            prop_risk (`float`): number of protective variants.
             tev (`int`): proportion of variance explained by gene.
+            alpha (`float`): p-value threshold for power.
 
         Returns:
            power (`float`): power for detection under the burden model.
@@ -215,7 +216,6 @@ class RareVariantBurdenPower(RareVariantPower):
         Returns:
             power  (`float`): power under model2 for burden test
 
-
         """
         assert ws.ndim == 1
         assert ws.size == ps.size
@@ -248,7 +248,7 @@ class RareVariantBurdenPower(RareVariantPower):
             j = self.sim_var_per_gene(seed=(i + 1))
             # Simulating the weights and allele frequencies.
             ws, ps = self.sim_af_weights(j=j, n=n, clip=True, test=test, seed=(i + 1))
-            est_power[i] = self.power_burden_model2(ws=ws, ps=ps, n=n, j=j, **kwargs)
+            est_power[i] = self.power_burden_model2(ws=ws, ps=ps, n=n, **kwargs)
         return est_power
 
 
