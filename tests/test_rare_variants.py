@@ -1,6 +1,6 @@
 """Testing module for GWAS power calculations."""
 import numpy as np
-from hypothesis import assume, given
+from hypothesis import assume, given, settings
 from hypothesis import strategies as st
 from hypothesis.extra.numpy import arrays
 
@@ -116,11 +116,19 @@ def test_ncp_burden_test_model1(n, j, jd, jp, tev):
     ),
 )
 def test_power_burden_model1(n, j, prop_causal, prop_risk, tev, alpha):
-    """Test of power under burden."""
+    """Test of power under burden model 1."""
     obj = RareVariantBurdenPower()
     obj.power_burden_model1(
         n=n, j=j, prop_causal=prop_causal, prop_risk=prop_risk, tev=tev, alpha=alpha
     )
+
+
+@given(n=st.integers(min_value=1), nreps=st.integers(min_value=1, max_value=100))
+@settings(deadline=None, max_examples=200)
+def test_power_burden_model1_real(n, nreps):
+    """Test of power under burden model 1 and real sampling."""
+    obj = RareVariantBurdenPower()
+    obj.power_burden_model1_real(n=n, nreps=nreps)
 
 
 @given(
