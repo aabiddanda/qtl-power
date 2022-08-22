@@ -98,6 +98,31 @@ def test_ncp_burden_test_model1(n, j, jd, jp, tev):
 
 
 @given(
+    n=st.integers(min_value=1),
+    j=st.integers(min_value=100, max_value=100000),
+    prop_causal=st.floats(min_value=1e-2, max_value=1.0),
+    prop_risk=st.floats(min_value=0.5, max_value=1.0),
+    tev=st.floats(
+        min_value=1e-5,
+        max_value=1,
+        exclude_min=True,
+        exclude_max=True,
+        allow_infinity=False,
+        allow_nan=False,
+    ),
+    alpha=st.floats(
+        min_value=1e-32, max_value=0.5, allow_infinity=False, allow_nan=False
+    ),
+)
+def test_power_burden_model1(n, j, prop_causal, prop_risk, tev, alpha):
+    """Test of power under burden."""
+    obj = RareVariantBurdenPower()
+    obj.power_burden_model1(
+        n=n, j=j, prop_causal=prop_causal, prop_risk=prop_risk, tev=tev, alpha=alpha
+    )
+
+
+@given(
     n=st.integers(min_value=1, max_value=1000000),
     ws=arrays(dtype=float, shape=100, elements=st.floats(0, 100)),
     ps=arrays(
