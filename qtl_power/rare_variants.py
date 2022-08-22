@@ -74,7 +74,7 @@ class RareVariantPower:
     def sim_var_per_gene(self, a=1.47, b=0.0108, seed=42):
         """Simulate the number of variants per-gene.
 
-        Paramter values are derived from GnomAD Exonic variants on Chromosome 4 from ~15730 AFR ancestry subjects.
+        Parameter values are derived from GnomAD Exonic variants on Chromosome 4 from ~15730 AFR ancestry subjects.
 
         For a Non-Finnish European ancestry setting with larger sample size (~112350), use a=1.44306, b=0.00372.
 
@@ -127,7 +127,9 @@ class RareVariantBurdenPower(RareVariantPower):
         ncp = n * ((jd - jp) ** 2) * tev / (j * (jd + jp))
         return ncp
 
-    def power_burden_model1(self, n=100, j=30, jd=10, jp=10, tev=0.1, alpha=1e-6):
+    def power_burden_model1(
+        self, n=100, j=30, prop_causal=0.80, prop_risk=0.1, tev=0.1, alpha=1e-6
+    ):
         """Estimate the power under a burden model 1.
 
         Args:
@@ -141,8 +143,33 @@ class RareVariantBurdenPower(RareVariantPower):
            power (`float`): power for detection under the burden model.
 
         """
+        assert (prop_causal > 0.0) & (prop_causal <= 1.0)
+        assert (prop_risk > 0.0) & (prop_risk <= 1.0)
+        j_causal = j * prop_causal
+        jd = j_causal * prop_risk
+        jp = j_causal * (1 - prop_risk)
         ncp = self.ncp_burden_test_model1(n=n, j=j, jd=jd, jp=jp, tev=tev)
-        return self.llr_power(alpha=alpha, ncp=ncp, ncp0=0)
+        return self.llr_power(alpha=alpha, ncp=ncp)
+
+    def power_burden_model1_real(self, n=100, nreps=10, **kwargs):
+        """Estimate power under model 1 with realistic numbers of variants per gene.
+
+        Args:
+            n (`int`): number of samples
+            nreps (`int`): number of replicates
+
+        Returns:
+            est_power (`np.array`): array of power estimates based on realistic number of variants.
+
+        """
+        assert n > 0
+        assert nreps > 0
+        est_power = np.zeros(nreps)
+        for i in range(nreps):
+            # Actually simulating the number of variants per-gene
+            j = self.sim_var_per_gene(seed=(i + 1))
+            est_power[i] = self.power_burden_model1(n=n, j=j, **kwargs)
+        return est_power
 
     def ncp_burden_test_model2(self, ws, ps, jd=10, jp=0, n=100, tev=0.1):
         """Estimate the non-centrality parameter for burden under Model 2.
@@ -171,10 +198,20 @@ class RareVariantBurdenPower(RareVariantPower):
         ncp = n * ((jd - jp) ** 2) * tev * sum_weights / (j * np.sum(ps * sum_test))
         return ncp
 
-    def power_burden_model2(self, ws, ps, jd=10, jp=10, n=100, tev=0.1, alpha=1e-6):
+    def power_burden_model2(
+        self, ws, ps, prop_causal=0.8, prop_risk=0.1, n=100, tev=0.1, alpha=1e-6
+    ):
         """Estimate power under burden for model 2."""
+        assert ws.ndim == 1
+        assert ws.size == ps.size
+        assert (prop_causal > 0.0) & (prop_causal <= 1.0)
+        assert (prop_risk > 0.0) & (prop_risk <= 1.0)
+        j = ws.size
+        jc = j * prop_causal
+        jd = jc * prop_risk
+        jp = jc * (1.0 - prop_risk)
         ncp = self.ncp_burden_test_model2(ws, ps, jd=jd, jp=jp, n=n, tev=tev)
-        return self.llr_power(alpha=alpha, ncp=ncp, ncp0=0)
+        return self.llr_power(alpha=alpha, ncp=ncp)
 
 
 class RareVariantVCPower(RareVariantPower):
