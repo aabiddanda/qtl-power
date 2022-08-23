@@ -114,7 +114,7 @@ class RareVariantBurdenPower(RareVariantPower):
             j (`int`): total number of variants in the gene
             jd (`int`): number of disease variants in the gene
             jp (`int`): number of protective variants in the gene
-            tev (`int`): proportion of variance explained by gene
+            tev (`float`): proportion of variance explained by gene
 
         Returns:
            ncp (`float`): non-centrality parameter
@@ -137,7 +137,7 @@ class RareVariantBurdenPower(RareVariantPower):
             j (`int`): total number of variants in the gene.
             prop_causal (`float`): proportion of causal variants.
             prop_risk (`float`): number of protective variants.
-            tev (`int`): proportion of variance explained by gene.
+            tev (`float`): proportion of variance explained by gene.
             alpha (`float`): p-value threshold for power.
 
         Returns:
@@ -151,6 +151,76 @@ class RareVariantBurdenPower(RareVariantPower):
         jp = j_causal * (1 - prop_risk)
         ncp = self.ncp_burden_test_model1(n=n, j=j, jd=jd, jp=jp, tev=tev)
         return self.llr_power(alpha=alpha, ncp=ncp)
+
+    def beta_power_burden_model1(
+        self, n=100, j=30, prop_causal=0.80, prop_risk=0.5, alpha=1e-6, power=0.80
+    ):
+        """Estimate the total explained variance by a region for adequate detection at a power threshold.
+
+        Args:
+            n (`int`): total sample size.
+            j (`int`): total number of variants in the gene.
+            prop_causal (`float`): proportion of causal variants.
+            prop_risk (`float`): number of protective variants.
+            alpha (`float`): p-value threshold for power.
+            power (`float`): power for detection under the burden model.
+
+        Returns:
+            opt_tev (`float`): TEV required for detection at this rate.
+
+        """
+        assert (power > 0) & (power <= 1.0)
+        f = (
+            lambda t: self.power_burden_model1(
+                n=n,
+                j=j,
+                prop_causal=prop_causal,
+                prop_risk=prop_risk,
+                tev=t,
+                alpha=alpha,
+            )
+            - power
+        )
+        try:
+            opt_tev = brentq(f, 1e-32, 1.0)
+        except (OverflowError, ValueError):
+            opt_tev = np.nan
+        return opt_tev
+
+    def burden_model1_opt_n(
+        self, j=30, tev=0.01, prop_causal=0.80, prop_risk=0.5, alpha=1e-6, power=0.80
+    ):
+        """Estimate the sample-size required for detection of supplied TEV in a region.
+
+        Args:
+            j (`int`): total number of variants in the gene.
+            tev (`float`): proportion of variance explained by gene.
+            prop_causal (`float`): proportion of causal variants.
+            prop_risk (`float`): number of protective variants.
+            alpha (`float`): p-value threshold for power.
+            power (`float`): power for detection under the burden model.
+
+        Returns:
+            opt_tev (`float`): TEV required for detection at this rate.
+
+        """
+        assert (power > 0) & (power <= 1.0)
+        f = (
+            lambda n: self.power_burden_model1(
+                n=n,
+                j=j,
+                prop_causal=prop_causal,
+                prop_risk=prop_risk,
+                tev=tev,
+                alpha=alpha,
+            )
+            - power
+        )
+        try:
+            opt_n = brentq(f, 1, 1e9)
+        except (OverflowError, ValueError):
+            opt_n = np.nan
+        return opt_n
 
     def power_burden_model1_real(self, n=100, nreps=10, **kwargs):
         """Estimate power under model 1 with realistic numbers of variants per gene.
