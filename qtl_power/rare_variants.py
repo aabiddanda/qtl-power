@@ -123,7 +123,7 @@ class RareVariantBurdenPower(RareVariantPower):
         assert n > 0
         assert j > 0
         assert (jd + jp) <= j
-        assert (tev > 0) & (tev < 1.0)
+        assert (tev > 0) & (tev <= 1.0)
         ncp = n * ((jd - jp) ** 2) * tev / (j * (jd + jp))
         return ncp
 
@@ -152,7 +152,7 @@ class RareVariantBurdenPower(RareVariantPower):
         ncp = self.ncp_burden_test_model1(n=n, j=j, jd=jd, jp=jp, tev=tev)
         return self.llr_power(alpha=alpha, ncp=ncp)
 
-    def beta_power_burden_model1(
+    def tev_power_burden_model1(
         self, n=100, j=30, prop_causal=0.80, prop_risk=0.5, alpha=1e-6, power=0.80
     ):
         """Estimate the total explained variance by a region for adequate detection at a power threshold.
@@ -187,7 +187,7 @@ class RareVariantBurdenPower(RareVariantPower):
             opt_tev = np.nan
         return opt_tev
 
-    def burden_model1_opt_n(
+    def opt_n_burden_model1(
         self, j=30, tev=0.01, prop_causal=0.80, prop_risk=0.5, alpha=1e-6, power=0.80
     ):
         """Estimate the sample-size required for detection of supplied TEV in a region.

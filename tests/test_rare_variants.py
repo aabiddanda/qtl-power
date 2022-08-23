@@ -83,9 +83,8 @@ def test_sim_var_per_gene(a, b, seed):
     jd=st.integers(min_value=0, max_value=50),
     jp=st.integers(min_value=0, max_value=50),
     tev=st.floats(
-        min_value=0,
+        min_value=1e-5,
         max_value=1,
-        exclude_min=True,
         exclude_max=True,
         allow_infinity=False,
         allow_nan=False,
@@ -106,7 +105,6 @@ def test_ncp_burden_test_model1(n, j, jd, jp, tev):
     tev=st.floats(
         min_value=1e-5,
         max_value=1,
-        exclude_min=True,
         exclude_max=True,
         allow_infinity=False,
         allow_nan=False,
@@ -129,6 +127,60 @@ def test_power_burden_model1_real(n, nreps):
     """Test of power under burden model 1 and real sampling."""
     obj = RareVariantBurdenPower()
     obj.power_burden_model1_real(n=n, nreps=nreps)
+
+
+@given(
+    n=st.integers(min_value=1),
+    j=st.integers(min_value=100, max_value=100000),
+    prop_causal=st.floats(min_value=1e-2, max_value=1.0),
+    prop_risk=st.floats(min_value=0.5, max_value=1.0),
+    power=st.floats(min_value=0.5, max_value=1.0, exclude_max=True),
+    alpha=st.floats(
+        min_value=1e-32, max_value=0.5, allow_infinity=False, allow_nan=False
+    ),
+)
+@settings(deadline=None, max_examples=200)
+def test_tev_power_burden_model1(n, j, prop_causal, prop_risk, alpha, power):
+    """Test detectable TEV under Burden Model 1."""
+    obj = RareVariantBurdenPower()
+    tev = obj.tev_power_burden_model1(
+        n=n, j=j, prop_causal=prop_causal, prop_risk=prop_risk, alpha=alpha, power=power
+    )
+    if ~np.isnan(tev):
+        assert tev >= 0
+        assert tev <= 1
+
+
+@given(
+    j=st.integers(min_value=100, max_value=100000),
+    tev=st.floats(
+        min_value=1e-5,
+        max_value=1,
+        exclude_max=True,
+        allow_infinity=False,
+        allow_nan=False,
+    ),
+    prop_causal=st.floats(min_value=1e-2, max_value=1.0),
+    prop_risk=st.floats(min_value=0.5, max_value=1.0),
+    power=st.floats(min_value=0.5, max_value=1.0, exclude_max=True),
+    alpha=st.floats(
+        min_value=1e-32, max_value=0.5, allow_infinity=False, allow_nan=False
+    ),
+)
+@settings(deadline=None, max_examples=200)
+def test_opt_n_burden_model1(j, tev, prop_causal, prop_risk, alpha, power):
+    """Test detectable TEV under Burden Model 1."""
+    obj = RareVariantBurdenPower()
+    opt_n = obj.opt_n_burden_model1(
+        j=j,
+        tev=tev,
+        prop_causal=prop_causal,
+        prop_risk=prop_risk,
+        alpha=alpha,
+        power=power,
+    )
+    if ~np.isnan(opt_n):
+        assert opt_n > 1
 
 
 @given(
