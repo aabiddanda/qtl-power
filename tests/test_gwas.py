@@ -1,9 +1,10 @@
 """Testing module for GWAS power calculations."""
 import numpy as np
-from hypothesis import given
+import pytest
+from hypothesis import given, settings
 from hypothesis import strategies as st
 
-from qtl_power.gwas import Gwas, GwasBinary, GwasQuant
+from qtl_power.gwas import Gwas, GwasBinary, GwasBinaryModel, GwasQuant
 
 
 @given(
@@ -68,6 +69,7 @@ def test_quant_trait_beta_power(n, p, power, r2, alpha):
     r2=st.floats(min_value=0.5, max_value=1.0),
     alpha=st.floats(exclude_min=True, exclude_max=True, min_value=1e-32, max_value=0.5),
 )
+@settings(deadline=None, max_examples=200)
 def test_quant_trait_opt_n(p, power, r2, alpha):
     """Test estimation of optimal sample-size under a quantitative model."""
     obj = GwasQuant()
@@ -131,6 +133,7 @@ def test_binary_trait_power(n, p, beta, r2, alpha, prop_cases):
         allow_nan=False,
     ),
 )
+@settings(deadline=None, max_examples=200)
 def test_binary_trait_beta_power(n, p, power, r2, alpha, prop_cases):
     """Test the function to obtain power under a quantitative model."""
     obj = GwasBinary()
@@ -151,6 +154,7 @@ def test_binary_trait_beta_power(n, p, power, r2, alpha, prop_cases):
         allow_nan=False,
     ),
 )
+@settings(deadline=None, max_examples=200)
 def test_binary_trait_opt_n(p, power, r2, alpha, prop_cases):
     """Test the function to obtain power under a quantitative model."""
     obj = GwasBinary()
@@ -176,10 +180,32 @@ def test_binary_trait_opt_n(p, power, r2, alpha, prop_cases):
 )
 def test_ncp_binary_model(n, p, model, prev, alpha, prop_cases):
     """Test NCP generation under different genetic models."""
-    obj = GwasBinary()
+    obj = GwasBinaryModel()
     obj.ncp_binary_model(
         n=n, p=p, model=model, prev=prev, alpha=alpha, prop_cases=prop_cases
     )
+
+
+@given(
+    n=st.integers(min_value=10),
+    p=st.floats(min_value=1e-4, max_value=0.5),
+    model=st.sampled_from(["10101", "", "a"]),
+    prev=st.floats(min_value=0, max_value=0.5, exclude_min=True),
+    alpha=st.floats(exclude_min=True, exclude_max=True, min_value=1e-32, max_value=0.5),
+    prop_cases=st.floats(
+        min_value=1e-3,
+        max_value=0.5,
+        allow_infinity=False,
+        allow_nan=False,
+    ),
+)
+def test_ncp_binary_model_bad_model(n, p, model, prev, alpha, prop_cases):
+    """Test NCP generation under different genetic models."""
+    obj = GwasBinaryModel()
+    with pytest.raises(ValueError):
+        obj.ncp_binary_model(
+            n=n, p=p, model=model, prev=prev, alpha=alpha, prop_cases=prop_cases
+        )
 
 
 @given(
@@ -197,8 +223,39 @@ def test_ncp_binary_model(n, p, model, prev, alpha, prop_cases):
 )
 def test_binary_trait_power_model(n, p, model, prev, alpha, prop_cases):
     """Test NCP generation under different genetic models."""
-    obj = GwasBinary()
+    obj = GwasBinaryModel()
     power = obj.binary_trait_power_model(
         n=n, p=p, model=model, prev=prev, alpha=alpha, prop_cases=prop_cases
     )
     assert np.isnan(power) or ((power >= 0) & (power <= 1))
+
+
+@given(
+    n=st.integers(min_value=10),
+    p=st.floats(min_value=1e-4, max_value=0.5),
+    model=st.sampled_from(["additive", "recessive", "dominant"]),
+    prev=st.floats(min_value=1e-4, max_value=0.5, exclude_min=True),
+    alpha=st.floats(exclude_min=True, exclude_max=True, min_value=1e-32, max_value=0.5),
+    power=st.floats(min_value=0.5, max_value=1, exclude_max=True),
+    prop_cases=st.floats(
+        min_value=1e-3,
+        max_value=0.5,
+        allow_infinity=False,
+        allow_nan=False,
+    ),
+)
+@settings(deadline=None, max_examples=200)
+def test_binary_trait_beta_power_model(n, p, model, prev, alpha, prop_cases, power):
+    """Test effect-size estimate for different models and power."""
+    obj = GwasBinaryModel()
+    opt_beta = obj.binary_trait_beta_power_model(
+        n=n,
+        p=p,
+        model=model,
+        prev=prev,
+        alpha=alpha,
+        prop_cases=prop_cases,
+        power=power,
+    )
+    if ~np.isnan(opt_beta):
+        assert opt_beta >= 0
