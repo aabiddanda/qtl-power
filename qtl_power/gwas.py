@@ -225,6 +225,14 @@ class GwasBinary(Gwas):
             opt_n = np.nan
         return opt_n
 
+
+class GwasBinaryModel(Gwas):
+    """GWAS Power calculations under different encodings of genotypic risk."""
+
+    def __init__(self):
+        """Initialize a GWAS power calculator for case/control traits under different genotypic models."""
+        super(GwasBinaryModel, self).__init__()
+
     def ncp_binary_model(
         self,
         n=100,
@@ -249,7 +257,6 @@ class GwasBinary(Gwas):
             raise ValueError(
                 f"Model should be additive|dominant|recessive, not {model}"
             )
-
         n_cases = n * prop_cases
         n_control = n * (1.0 - prop_cases)
         af = np.array([p**2, 2 * p * (1.0 - p), (1 - p) ** 2])
@@ -293,7 +300,15 @@ class GwasBinary(Gwas):
             power (`float`): power under the model.
 
         """
-        ncp = self.ncp_binary_model(n, p, beta, model, prev, alpha, prop_cases)
+        ncp = self.ncp_binary_model(
+            n=n,
+            p=p,
+            beta=beta,
+            model=model,
+            prev=prev,
+            alpha=alpha,
+            prop_cases=prop_cases,
+        )
         return self.llr_power(alpha, df=1, ncp=ncp)
 
     def binary_trait_beta_power_model(

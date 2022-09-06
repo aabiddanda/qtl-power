@@ -5,3 +5,5 @@ __pycache__/
 sandbox/
 build/
 qtl_power.egg-info/
+.DS_Store
+docs/_build/
