@@ -43,13 +43,14 @@ class ExtremePhenotype_Power:
             beta (`float`): effect-size
             q0 (`float`): bottom quantile to establish as controls (or low-extremes)
             q1 (`float`): upper quantile to establish as cases (or upper extremes)
+
         Returns:
             power (`float`): power of extreme sampling design
 
         """
         assert niter > 0
-        assert q0 < 0.5
-        assert q1 < 0.5
+        assert q0 <= 0.5
+        assert q1 <= 0.5
         n_reject = 0
         for i in range(niter):
             ac, phenotype = self.sim_extreme_pheno(n=n, maf=maf, beta=beta, seed=i)

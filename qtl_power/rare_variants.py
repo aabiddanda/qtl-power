@@ -34,15 +34,15 @@ class RareVariantPower:
     ):
         """Simulate allele frequencies from a beta distribution.
 
-        Ideally the beta distribution is derived from realized catalogues of variation.
+        Ideally the beta distribution is derived from realized allele frequencies.
         The current parameters are based on 15k African ancestry individuals.
         For mimicing a much larger set (112k) of Non-Finnish European individuals,
         use the parameters a1=0.14311324240262455, b1=26.97369198989023,
 
         Args:
             j (`int`): number of variants
-            a1 (`float`): shape parameter of a gamma distribution
-            b1 (`float`): scale parameter of a gamma distribution
+            a1 (`float`): shape parameter of the beta distribution
+            b1 (`float`): scale parameter of the beta distribution
             n (`float`): number of samples
             clip (`boolean`): perform clipping based on the current sample-size.
             seed (`int`): random seed.
