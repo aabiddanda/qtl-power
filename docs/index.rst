@@ -8,10 +8,11 @@ Welcome to qtl-power's documentation!
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
 
-   installation.rst
-
+   installation
+   contributing
+   testing
+   changelog
 
 Indices and tables
 ==================
