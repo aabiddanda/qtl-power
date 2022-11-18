@@ -10,4 +10,3 @@ For installation, we recommend installing this package from source::
 Or more succinctly to use `pip`'s functionality to install from git directly::
 
   pip install git+https://gitlab.com/data-analysis5/qtl-power@default
-

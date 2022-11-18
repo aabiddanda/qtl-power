@@ -242,38 +242,6 @@ class RareVariantBurdenPower(RareVariantPower):
             est_power[i] = self.power_burden_model1(n=n, j=j, **kwargs)
         return est_power
 
-    def ncp_burden_test_model2(self, ws, ps, n=100, jd=10, jp=0, tev=0.1):
-        """Estimate the non-centrality parameter for burden under Model 2.
-
-        Args:
-            ws (`np.array`): array of weights for alleles.
-            ps (`np.array`): array of variant allele frequencies.
-            n (`int`): sample-size.
-            jd (`int`): number of disease variants.
-            jp (`int`): number of protective variants.
-            tev (`int`): total explained variance in trait of locus.
-
-        Returns:
-            ncp (`float`): non-centrality parameter for chi-squared distribution
-
-        """
-        assert ws.size == ps.size
-        assert n > 0
-        assert jd >= 0
-        assert jp >= 0
-        assert jd + jp > 0
-        assert (tev > 0) & (tev < 1.0)
-        j = ws.size
-        sum_weights = np.sum((ws**2) * (ps**2) * (1.0 - ps))
-        sum_test = np.sum((ws**2) * ps * (1.0 - ps))
-        ncp = n * ((jd - jp) ** 2) * tev * sum_weights / (j * np.sum(ps * sum_test))
-        return ncp
-
-    def power_burden_model2(self, ws, ps, jd=10, jp=10, n=100, tev=0.1, alpha=1e-6):
-        """Estimate power under burden for model 2."""
-        ncp = self.ncp_burden_test_model2(ws, ps, jd=jd, jp=jp, n=n, tev=tev)
-        return self.llr_power(alpha=alpha, ncp=ncp, ncp0=0)
-
 
 class RareVariantVCPower(RareVariantPower):
     """Approximation of power for rare-variant variance component tests based on results from Derkach et al (2018)."""
@@ -361,13 +329,22 @@ class RareVariantVCPower(RareVariantPower):
         assert ws.ndim == 1
         assert ps.ndim == 1
         assert n > 1
-        assert tev
+        assert tev >= 0
         ncp0 = self.ncp_vc_first_order_model1(ws, ps, n, 0.0)
         ncp = self.ncp_vc_first_order_model1(ws, ps, n, tev)
         return self.llr_power(df=df, ncp0=ncp0, ncp=ncp, alpha=alpha)
 
     def effect_size_vc_first_order_model1(
-        self, ws, ps, n=100, power=0.8, alpha=1e-6, df=1
+        self,
+        ws,
+        ps,
+        n=100,
+        prop_causal=0.1,
+        prop_risk=0.1,
+        power=0.8,
+        alpha=1e-6,
+        tev=0.1,
+        df=1,
     ):
         """Estimate power under burden for model 2.
 
@@ -377,7 +354,7 @@ class RareVariantVCPower(RareVariantPower):
             n (`int`): sample-size.
             prop_causal (`float`): proportion of causal variants.
             prop_risk (`float`): number of protective variants.
-            tev (`int`): total explained variance in trait of locus.
+            tev (`float`): total explained variance in trait from locus.
             alpha (`float`): p-value threshold for power.
 
         Returns:
@@ -393,27 +370,4 @@ class RareVariantVCPower(RareVariantPower):
         jd = jc * prop_risk
         jp = jc * (1.0 - prop_risk)
         ncp = self.ncp_burden_test_model2(ws, ps, jd=jd, jp=jp, n=n, tev=tev)
-        return self.llr_power(alpha=alpha, ncp=ncp)
-
-    def power_burden_model2_real(self, n=100, nreps=10, test="SKAT", **kwargs):
-        """Estimate power under model 2 with realistic numbers of variants per gene.
-
-        Args:
-            n (`int`): number of samples.
-            nreps (`int`): number of replicates.
-            test (`string`): type of weighting scheme for allele frequencies.
-
-        Returns:
-            est_power (`np.array`): array of power estimates based on realistic number of variants.
-
-        """
-        assert n > 0
-        assert nreps > 0
-        est_power = np.zeros(nreps)
-        for i in range(nreps):
-            # Simulating the number of variants per-gene.
-            j = self.sim_var_per_gene(seed=(i + 1))
-            # Simulating the weights and allele frequencies.
-            ws, ps = self.sim_af_weights(j=j, n=n, clip=True, test=test, seed=(i + 1))
-            est_power[i] = self.power_burden_model2(ws=ws, ps=ps, n=n, **kwargs)
-        return est_power
+        return self.llr_power(alpha=alpha, ncp=ncp, df=df)
