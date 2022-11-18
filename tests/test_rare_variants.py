@@ -3,9 +3,8 @@ import numpy as np
 from hypothesis import assume, given, settings
 from hypothesis import strategies as st
 
-from qtl_power.rare_variants import RareVariantBurdenPower, RareVariantPower
-
-# from hypothesis.extra.numpy import arrays
+from qtl_power.rare_variants import (RareVariantBurdenPower, RareVariantPower,
+                                     RareVariantVCPower)
 
 
 @given(
@@ -185,3 +184,24 @@ def test_opt_n_burden_model1(j, tev, prop_causal, prop_risk, alpha, power):
     )
     if ~np.isnan(opt_n):
         assert opt_n > 1
+
+
+@given(
+    j=st.integers(min_value=1, max_value=10000),
+    n=st.integers(min_value=100, max_value=10000),
+    tev=st.floats(
+        min_value=1e-4,
+        max_value=1,
+        exclude_max=True,
+        allow_infinity=False,
+        allow_nan=False,
+    ),
+    test=st.sampled_from(["SKAT", "Calpha", "Hotelling"]),
+)
+@settings(deadline=None, max_examples=100)
+def test_ncp_vc_first_order_model1(j, n, tev, test):
+    """Test non-centrality parameter creation for model 1."""
+    obj = RareVariantVCPower()
+    ws, ps = obj.sim_af_weights(j=j, test=test)
+    _, _, _, _, df, ncp = obj.ncp_vc_first_order_model1(ws, ps, n=n, tev=tev)
+    assert ncp >= 0

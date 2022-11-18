@@ -297,11 +297,12 @@ class RareVariantVCPower(RareVariantPower):
             tev (`float`): total explained variance by a locus
 
         Returns:
+           df (`float`): degrees of freedom for variance component test
            ncp (`float`): non-centrality parameter
 
         """
         assert ws.size == ps.size
-        assert n > 0
+        assert n > 1
         assert (tev >= 0) & (tev < 1.0)
         j = ws.size
         lambdas = n * ws * ps * (1.0 - ps)
@@ -309,11 +310,11 @@ class RareVariantVCPower(RareVariantPower):
         c2 = np.sum((lambdas**2) * (1 + 2 / j * tev))
         c3 = np.sum((lambdas**3) * (1 + 3 / j * tev))
         c4 = np.sum((lambdas**4) * (1 + 4 / j * tev))
-        ncp = self.match_cumulants_ncp(c1, c2, c3, c4)
-        return ncp
+        df, ncp = self.match_cumulants_ncp(c1, c2, c3, c4)
+        return c1, c2, c3, c4, df, ncp
 
     def power_vc_first_order_model1(self, ws, ps, n=100, tev=0.1, alpha=1e-6, df=1):
-        """Compute the power for detection under model 1.
+        """Compute the power for detection under model 1 for a variance component test.
 
         Args:
             ws (`np.array`): numpy array of weights per-variant
@@ -321,6 +322,7 @@ class RareVariantVCPower(RareVariantPower):
             n (`int`): sample size
             tev (`float`): total explained variance by a locus
             alpha (`float`): total significance level for estimation of power
+            df (`float`): degree of freedom for test
 
         Returns:
            power (`float`): estimated power under this variance component model.
@@ -330,44 +332,18 @@ class RareVariantVCPower(RareVariantPower):
         assert ps.ndim == 1
         assert n > 1
         assert tev >= 0
-        ncp0 = self.ncp_vc_first_order_model1(ws, ps, n, 0.0)
-        ncp = self.ncp_vc_first_order_model1(ws, ps, n, tev)
-        return self.llr_power(df=df, ncp=ncp, ncp0=ncp0, alpha=alpha)
-
-    def effect_size_vc_first_order_model1(
-        self,
-        ws,
-        ps,
-        n=100,
-        prop_causal=0.1,
-        prop_risk=0.1,
-        power=0.8,
-        alpha=1e-6,
-        tev=0.1,
-        df=1,
-    ):
-        """Estimate power under burden for model 2.
-
-        Args:
-            ws (`np.array`): array of weights for alleles.
-            ps (`np.array`): array of variant allele frequencies.
-            n (`int`): sample-size.
-            prop_causal (`float`): proportion of causal variants.
-            prop_risk (`float`): number of protective variants.
-            tev (`float`): total explained variance in trait from locus.
-            alpha (`float`): p-value threshold for power.
-
-        Returns:
-            power  (`float`): power under model2 for burden test
-
-        """
-        assert ws.ndim == 1
-        assert ws.size == ps.size
-        assert (prop_causal > 0.0) & (prop_causal <= 1.0)
-        assert (prop_risk > 0.0) & (prop_risk <= 1.0)
-        j = ws.size
-        jc = j * prop_causal
-        jd = jc * prop_risk
-        jp = jc * (1.0 - prop_risk)
-        ncp = self.ncp_burden_test_model2(ws, ps, jd=jd, jp=jp, n=n, tev=tev)
-        return self.llr_power(alpha=alpha, ncp=ncp, df=df)
+        c10, c20, _, _, df0, ncp0 = self.ncp_vc_first_order_model1(ws, ps, n, 0.0)
+        c11, c21, _, _, df1, ncp = self.ncp_vc_first_order_model1(ws, ps, n, tev)
+        ct = ncx2.ppf(1.0 - alpha, df=df0, nc=ncp0)
+        mux = df0 + ncp0
+        muq = c10
+        sigmax = np.sqrt(2 * (df0 + 2 * ncp0))
+        sigmaq = np.sqrt(2 * c20)
+        ctt = sigmaq / sigmax * (ct - mux) + muq
+        mux = df1 + ncp
+        muq = c11
+        sigmax = np.sqrt(2 * (df1 + 2 * ncp))
+        sigmaq = np.sqrt(2 * c21)
+        ctt = sigmax / sigmaq * (ctt - muq) + mux
+        power = ncx2.sf(ctt, df=df1, nc=ncp)
+        return power
