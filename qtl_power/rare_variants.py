@@ -332,7 +332,7 @@ class RareVariantVCPower(RareVariantPower):
         assert tev >= 0
         ncp0 = self.ncp_vc_first_order_model1(ws, ps, n, 0.0)
         ncp = self.ncp_vc_first_order_model1(ws, ps, n, tev)
-        return self.llr_power(df=df, ncp0=ncp0, ncp=ncp, alpha=alpha)
+        return self.llr_power(df=df, ncp=ncp, ncp0=ncp0, alpha=alpha)
 
     def effect_size_vc_first_order_model1(
         self,

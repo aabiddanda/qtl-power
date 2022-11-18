@@ -5,7 +5,7 @@ This python package is supported by substantial unit test coverage. In particula
 
 In order to run the unit tests (and ensure changes have not broken previous testing)::
 
-  pip install pytest-cov pytest-xdist hypothesis 
+  pip install pytest-cov pytest-xdist hypothesis
   pytest -n auto --cov
 
 this will ensure you apply all of the unit tests using multiple available cores on your machine and the coverage will subsequently be output. Note that if you have setup the conda environment using the `environment.yaml` file you will not have to run the `pip install` commands.
