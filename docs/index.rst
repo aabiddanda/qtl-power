@@ -1,18 +1,21 @@
-.. qtl-power documentation master file, created by
-   sphinx-quickstart on Fri Aug  5 10:47:58 2022.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 Welcome to qtl-power's documentation!
 =====================================
 
 .. toctree::
-   :maxdepth: 2
-
+   :maxdepth: 1
+   :caption: User Guide
+    
    installation
    contributing
    testing
    changelog
+
+.. toctree::
+   :maxdepth: 2
+   :caption: API Documentation 
+   
+   api
+
 
 Indices and tables
 ==================

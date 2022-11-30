@@ -1,4 +1,4 @@
-"""Power calculations for Extreme phenotype sampling designs."""
+"""Power calculations for extreme phenotype sampling designs."""
 
 import numpy as np
 from scipy.stats import fisher_exact
@@ -15,13 +15,13 @@ class ExtremePhenotype_Power:
         """Simulate an extreme phenotype under an HWE assumption.
 
         Args:
-            n (`int`): total sample size
-            maf (`float`): minor allele frequency of tested variant
-            beta (`float`): effect-size in standardized units
-            seed (`int`): seed for running simulations
+            n (`int`): total sample size.
+            maf (`float`): minor allele frequency of tested variant.
+            beta (`float`): effect-size in standard deviations.
+            seed (`int`): seed for running simulations.
         Returns:
-            allele_count (`np.array`): vector of allele-counts
-            phenotypes (`np.array`): quantitative phenotypes
+            allele_count (`np.array`): vector of allele-counts.
+            phenotypes (`np.array`): quantitative phenotypes.
 
         """
         assert seed > 0
@@ -40,7 +40,7 @@ class ExtremePhenotype_Power:
         Args:
             n (`int`): total sample size
             maf (`float`): minor allele frequency of tested variant
-            beta (`float`): effect-size
+            beta (`float`): effect-size in standard deviations
             q0 (`float`): bottom quantile to establish as controls (or low-extremes)
             q1 (`float`): upper quantile to establish as cases (or upper extremes)
 

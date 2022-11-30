@@ -6,7 +6,11 @@ from scipy.stats import beta, gamma, ncx2
 
 
 class RareVariantPower:
-    """Power calculator for rare-variant power."""
+    """Power calculator for rare-variant power.
+
+    Methods based on derivations from [PAGEANT](https://doi.org/10.1093/bioinformatics/btx770)
+
+    """
 
     def __init__(self):
         """Initialize rare-variant power calculator."""
@@ -110,14 +114,14 @@ class RareVariantBurdenPower(RareVariantPower):
         The key assumption in this case is that there is independence between an alleles effect-size and its MAF.
 
         Args:
-            n (`int`): total sample size
-            j (`int`): total number of variants in the gene
-            jd (`int`): number of disease variants in the gene
-            jp (`int`): number of protective variants in the gene
-            tev (`float`): proportion of variance explained by gene
+            n (`int`): total sample size.
+            j (`int`): total number of variants in the gene.
+            jd (`int`): number of disease variants in the gene.
+            jp (`int`): number of protective variants in the gene.
+            tev (`float`): proportion of variance explained by gene.
 
         Returns:
-           ncp (`float`): non-centrality parameter
+           ncp (`float`): non-centrality parameter.
 
         """
         assert n > 0
@@ -130,7 +134,7 @@ class RareVariantBurdenPower(RareVariantPower):
     def power_burden_model1(
         self, n=100, j=30, prop_causal=0.80, prop_risk=0.1, tev=0.1, alpha=1e-6
     ):
-        """Estimate the power under a burden model 1.
+        """Estimate the power under a burden model 1 from PAGEANT.
 
         Args:
             n (`int`): total sample size.
@@ -223,7 +227,7 @@ class RareVariantBurdenPower(RareVariantPower):
         return opt_n
 
     def power_burden_model1_real(self, n=100, nreps=10, **kwargs):
-        """Estimate power under model 1 with realistic numbers of variants per gene.
+        """Estimate power under model 1 from PAGEANT with realistic variants per gene.
 
         Args:
             n (`int`): number of samples
@@ -249,16 +253,6 @@ class RareVariantVCPower(RareVariantPower):
     def __init__(self):
         """Initialize the power calculator for the variance-component tests."""
         super(RareVariantVCPower, self).__init__()
-
-    def opt_match_cumulants(self, c1, c2, c3, c4):
-        """Optimize and find roots for cumulant matching."""
-        f1 = lambda l: (1.0 + l) - c1
-        f2 = lambda l: (2.0 + 4 * l) - c2
-        f3 = lambda l: (8.0 + 24 * l) - c3
-        f4 = lambda l: (48.0 + 192 * l) - c4
-        f_tot = lambda l: f1(l) + f2(l) + f3(l) + f4(l)
-        opt_ncp = brentq(f_tot, 0.0, 1e3)
-        return opt_ncp
 
     def match_cumulants_ncp(self, c1, c2, c3, c4):
         """Obtain the degrees of freedom and non-centrality parameter from cumulants.
