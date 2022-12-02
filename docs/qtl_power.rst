@@ -1,6 +1,14 @@
 qtl\_power package
 ==================
 
+Module contents
+---------------
+
+.. automodule:: qtl_power
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Submodules
 ----------
 
@@ -24,14 +32,6 @@ qtl\_power.rare\_variants module
 --------------------------------
 
 .. automodule:: qtl_power.rare_variants
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: qtl_power
    :members:
    :undoc-members:
    :show-inheritance:
