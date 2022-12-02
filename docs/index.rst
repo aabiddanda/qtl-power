@@ -15,6 +15,7 @@ Welcome to qtl-power's documentation!
    :caption: API Documentation 
    
    api
+   modules
 
 
 Indices and tables
