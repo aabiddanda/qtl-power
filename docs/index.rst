@@ -4,7 +4,7 @@ Welcome to qtl-power's documentation!
 .. toctree::
    :maxdepth: 1
    :caption: User Guide
-    
+
    installation
    contributing
    testing
@@ -12,9 +12,8 @@ Welcome to qtl-power's documentation!
 
 .. toctree::
    :maxdepth: 2
-   :caption: API Documentation 
-   
-   api
+   :caption: API Documentation
+
    modules
 
 

@@ -12,4 +12,3 @@ Top level classes.
     gwas
     rare_variants
     extreme_pheno
-

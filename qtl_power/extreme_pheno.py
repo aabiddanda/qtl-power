@@ -18,7 +18,7 @@ class ExtremePhenotype_Power:
             n (`int`): total sample size.
             maf (`float`): minor allele frequency of tested variant.
             beta (`float`): effect-size in standard deviations.
-            seed (`int`): seed for running simulations.
+            seed (`int`): random seed for simulations.
         Returns:
             allele_count (`np.array`): vector of allele-counts.
             phenotypes (`np.array`): quantitative phenotypes.
@@ -26,6 +26,7 @@ class ExtremePhenotype_Power:
         """
         assert seed > 0
         assert n > 0
+        assert (maf > 0) & (maf <= 0.5)
         np.random.seed(seed)
         allele_count = np.random.binomial(2, maf, size=n)
         phenotype = np.random.normal(size=n) + beta * allele_count
@@ -38,11 +39,13 @@ class ExtremePhenotype_Power:
         Estimate the power from an extreme-phenotype sampling design.
 
         Args:
-            n (`int`): total sample size
-            maf (`float`): minor allele frequency of tested variant
-            beta (`float`): effect-size in standard deviations
-            q0 (`float`): bottom quantile to establish as controls (or low-extremes)
-            q1 (`float`): upper quantile to establish as cases (or upper extremes)
+            n (`int`): total sample size.
+            maf (`float`): minor allele frequency of tested variant.
+            beta (`float`): effect-size in standard deviations.
+            niter (`int`): number of simulation iterations.
+            alpha (`float`): significance threshold for Fishers Exact Test.
+            q0 (`float`): bottom quantile to establish as controls (or low-extremes).
+            q1 (`float`): upper quantile to establish as cases (or upper extremes).
 
         Returns:
             power (`float`): power of extreme sampling design
@@ -51,6 +54,7 @@ class ExtremePhenotype_Power:
         assert niter > 0
         assert q0 <= 0.5
         assert q1 <= 0.5
+        assert (alpha > 0) and (alpha < 1.0)
         n_reject = 0
         for i in range(niter):
             ac, phenotype = self.sim_extreme_pheno(n=n, maf=maf, beta=beta, seed=i)
