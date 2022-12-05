@@ -4,7 +4,7 @@ import numpy as np
 from scipy.stats import fisher_exact
 
 
-class ExtremePhenotype_Power:
+class ExtremePhenotype:
     """Class defining extreme phenotype designs."""
 
     def __init__(self):
@@ -57,7 +57,7 @@ class ExtremePhenotype_Power:
         assert (alpha > 0) and (alpha < 1.0)
         n_reject = 0
         for i in range(niter):
-            ac, phenotype = self.sim_extreme_pheno(n=n, maf=maf, beta=beta, seed=i)
+            ac, phenotype = self.sim_extreme_pheno(n=n, maf=maf, beta=beta, seed=i + 1)
             excontrols = phenotype <= np.quantile(phenotype, q0)  # bottom percentiles
             excases = phenotype >= np.quantile(phenotype, 1 - q1)  # top-percentiles
             table = np.array(
