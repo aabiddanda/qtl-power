@@ -263,14 +263,13 @@ class GwasBinaryModel(Gwas):
         denom = (x * af).sum()
         aa_prob = x[0] * prev / denom
         ab_prob = x[1] * prev / denom
-        # bb_prob = x[2] * prev / denom
         case_af = (aa_prob * af[0] + ab_prob * af[1] * 0.5) / prev
         control_af = ((1.0 - aa_prob) * af[0] + (1.0 - ab_prob) * af[1] * 0.5) / (
             1.0 - prev
         )
         v_cases = case_af * (1.0 - case_af)
         v_control = control_af * (1.0 - control_af)
-        ncp = case_af - control_af / (
+        ncp = (case_af - control_af) / (
             np.sqrt((v_cases / n_cases + v_control / n_control) * 0.5)
         )
         return ncp

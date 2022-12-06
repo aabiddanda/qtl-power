@@ -5,6 +5,7 @@ Welcome to qtl-power's documentation!
    :maxdepth: 1
    :caption: User Guide
 
+   introduction
    installation
    contributing
    testing
@@ -14,7 +15,6 @@ Welcome to qtl-power's documentation!
    :maxdepth: 2
    :caption: API Documentation
 
-   api
    modules
 
 
