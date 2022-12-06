@@ -14,6 +14,7 @@ Welcome to qtl-power's documentation!
    :maxdepth: 2
    :caption: API Documentation
 
+   api
    modules
 
 
