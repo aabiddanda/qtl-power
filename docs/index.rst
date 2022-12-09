@@ -15,7 +15,7 @@ Welcome to qtl-power's documentation!
    :maxdepth: 2
    :caption: API Documentation
 
-   modules
+   qtl_power
 
 
 Indices and tables
