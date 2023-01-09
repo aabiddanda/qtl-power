@@ -10,3 +10,6 @@ dependencies:
     - pandas
     - matplotlib
     - tqdm
+    - pytest-cov
+    - pytest-xdist
+    - hypothesis

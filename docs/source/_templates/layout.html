@@ -1,0 +1,64 @@
+{%- extends "!layout.html" %}
+
+
+
+
+{% block sidebartitle %}
+
+<a href="{{ theme_logo_url or pathto(master_doc) }}" class="icon icon-home"> {{ project }}
+<a href="https://54gene.com">
+    <img src="_static/54gene_logo.png" class="logo" alt="{{ _('Logo') }}"/>
+</a>
+
+
+{%- if theme_display_version %}
+{%- set nav_version = version %}
+{%- if READTHEDOCS and current_version %}
+  {%- set nav_version = current_version %}
+{%- endif %}
+{%- if nav_version %}
+  <div class="version">
+    {{ nav_version }}
+  </div>
+{%- endif %}
+{%- endif %}
+
+{%- include "searchbox.html" %}
+
+{%- endblock %}
+
+
+{{ fullname | escape | underline}}
+
+.. currentmodule:: {{ module }}
+
+.. autoclass:: {{ objname }}
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   {% block methods %}
+   {% if methods %}
+   .. rubric:: {{ _('Methods') }}
+
+   .. autosummary::
+      :nosignatures:
+   {% for item in methods %}
+      {%- if not item.startswith('_') %}
+      ~{{ name }}.{{ item }}
+      {%- endif -%}
+   {%- endfor %}
+   {% endif %}
+   {% endblock %}
+
+   {% block attributes %}
+   {% if attributes %}
+   .. rubric:: {{ _('Attributes') }}
+
+   .. autosummary::
+   {% for item in attributes %}
+      ~{{ name }}.{{ item }}
+   {%- endfor %}
+   {% endif %}
+   {% endblock %}
