@@ -6,7 +6,11 @@ from scipy.stats import beta, gamma, ncx2
 
 
 class RareVariantPower:
-    """Power calculator for rare-variant power."""
+    """Power calculator for rare-variant power.
+
+    Methods based on derivations from [PAGEANT](https://doi.org/10.1093/bioinformatics/btx770)
+
+    """
 
     def __init__(self):
         """Initialize rare-variant power calculator."""
@@ -34,15 +38,15 @@ class RareVariantPower:
     ):
         """Simulate allele frequencies from a beta distribution.
 
-        Ideally the beta distribution is derived from realized catalogues of variation.
+        Ideally the beta distribution is derived from realized allele frequencies.
         The current parameters are based on 15k African ancestry individuals.
         For mimicing a much larger set (112k) of Non-Finnish European individuals,
         use the parameters a1=0.14311324240262455, b1=26.97369198989023,
 
         Args:
             j (`int`): number of variants
-            a1 (`float`): shape parameter of a gamma distribution
-            b1 (`float`): scale parameter of a gamma distribution
+            a1 (`float`): shape parameter of the beta distribution
+            b1 (`float`): scale parameter of the beta distribution
             n (`float`): number of samples
             clip (`boolean`): perform clipping based on the current sample-size.
             seed (`int`): random seed.
@@ -110,14 +114,14 @@ class RareVariantBurdenPower(RareVariantPower):
         The key assumption in this case is that there is independence between an alleles effect-size and its MAF.
 
         Args:
-            n (`int`): total sample size
-            j (`int`): total number of variants in the gene
-            jd (`int`): number of disease variants in the gene
-            jp (`int`): number of protective variants in the gene
-            tev (`float`): proportion of variance explained by gene
+            n (`int`): total sample size.
+            j (`int`): total number of variants in the gene.
+            jd (`int`): number of disease variants in the gene.
+            jp (`int`): number of protective variants in the gene.
+            tev (`float`): proportion of variance explained by gene.
 
         Returns:
-           ncp (`float`): non-centrality parameter
+           ncp (`float`): non-centrality parameter.
 
         """
         assert n > 0
@@ -130,7 +134,7 @@ class RareVariantBurdenPower(RareVariantPower):
     def power_burden_model1(
         self, n=100, j=30, prop_causal=0.80, prop_risk=0.1, tev=0.1, alpha=1e-6
     ):
-        """Estimate the power under a burden model 1.
+        """Estimate the power under a burden model 1 from PAGEANT.
 
         Args:
             n (`int`): total sample size.
@@ -223,7 +227,7 @@ class RareVariantBurdenPower(RareVariantPower):
         return opt_n
 
     def power_burden_model1_real(self, n=100, nreps=10, **kwargs):
-        """Estimate power under model 1 with realistic numbers of variants per gene.
+        """Estimate power under model 1 from PAGEANT with realistic variants per gene.
 
         Args:
             n (`int`): number of samples
@@ -242,81 +246,98 @@ class RareVariantBurdenPower(RareVariantPower):
             est_power[i] = self.power_burden_model1(n=n, j=j, **kwargs)
         return est_power
 
-    def ncp_burden_test_model2(self, ws, ps, n=100, jd=10, jp=0, tev=0.1):
-        """Estimate the non-centrality parameter for burden under Model 2.
+
+class RareVariantVCPower(RareVariantPower):
+    """Approximation of power for rare-variant variance component tests based on results from Derkach et al (2018)."""
+
+    def __init__(self):
+        """Initialize the power calculator for the variance-component tests."""
+        super(RareVariantVCPower, self).__init__()
+
+    def match_cumulants_ncp(self, c1, c2, c3, c4):
+        """Obtain the degrees of freedom and non-centrality parameter from cumulants.
 
         Args:
-            ws (`np.array`): array of weights for alleles.
-            ps (`np.array`): array of variant allele frequencies.
-            n (`int`): sample-size.
-            jd (`int`): number of disease variants.
-            jp (`int`): number of protective variants.
-            tev (`int`): total explained variance in trait of locus.
+            c1 (`float`): first cumulant of non-central chi-squared dist.
+            c2 (`float`): second cumulant of non-central chi-squared dist.
+            c3 (`float`): third cumulant of non-central chi-squared dist.
+            c4 (`float`): fourth cumulant of non-central chi-squared dist.
 
         Returns:
-            ncp (`float`): non-centrality parameter for chi-squared distribution
+            df (`int`): degrees of freedom for test.
+            ncp (`float`): non-centrality parameter.
+
+        """
+        s1 = c3 / c2 ** (3 / 2)
+        s2 = c4 / c2**2
+        if (s1**2) > s2:
+            a = 1 / (s1 - np.sqrt(s1**2 - s2))
+            ncp = s1 * a**3 - a**2
+            df = a**2 - 2 * ncp
+        else:
+            ncp = 0
+            df = c2**3 / c3**2
+        return df, ncp
+
+    def ncp_vc_first_order_model1(self, ws, ps, n=100, tev=0.1):
+        """Approximation of the non-centrality parameter under model S1 from Derkach et al.
+
+        The key assumption is independence between an alleles effect-size and its MAF, from Table S1 in Derkach et al.
+
+        Args:
+            ws (`np.array`): numpy array of weights per-variant
+            ps (`np.array`): numpy array of allele frequencies
+            n (`int`): sample size
+            tev (`float`): total explained variance by a locus
+
+        Returns:
+           df (`float`): degrees of freedom for variance component test
+           ncp (`float`): non-centrality parameter
 
         """
         assert ws.size == ps.size
-        assert n > 0
-        assert jd >= 0
-        assert jp >= 0
-        assert jd + jp > 0
-        assert (tev > 0) & (tev < 1.0)
+        assert n > 1
+        assert (tev >= 0) & (tev < 1.0)
         j = ws.size
-        sum_weights = np.sum((ws**2) * (ps**2) * (1.0 - ps))
-        sum_test = np.sum((ws**2) * ps * (1.0 - ps))
-        ncp = n * ((jd - jp) ** 2) * tev * sum_weights / (j * np.sum(ps * sum_test))
-        return ncp
+        lambdas = n * ws * ps * (1.0 - ps)
+        c1 = np.sum(lambdas * (1 + 1 / j * tev))
+        c2 = np.sum((lambdas**2) * (1 + 2 / j * tev))
+        c3 = np.sum((lambdas**3) * (1 + 3 / j * tev))
+        c4 = np.sum((lambdas**4) * (1 + 4 / j * tev))
+        df, ncp = self.match_cumulants_ncp(c1, c2, c3, c4)
+        return c1, c2, c3, c4, df, ncp
 
-    def power_burden_model2(
-        self, ws, ps, n=100, prop_causal=0.8, prop_risk=0.1, tev=0.1, alpha=1e-6
-    ):
-        """Estimate power under burden for model 2.
+    def power_vc_first_order_model1(self, ws, ps, n=100, tev=0.1, alpha=1e-6, df=1):
+        """Compute the power for detection under model 1 for a variance component test.
 
         Args:
-            ws (`np.array`): array of weights for alleles.
-            ps (`np.array`): array of variant allele frequencies.
-            n (`int`): sample-size.
-            prop_causal (`float`): proportion of causal variants.
-            prop_risk (`float`): number of protective variants.
-            tev (`int`): total explained variance in trait of locus.
-            alpha (`float`): p-value threshold for power.
+            ws (`np.array`): numpy array of weights per-variant
+            ps (`np.array`): numpy array of allele frequencies
+            n (`int`): sample size
+            tev (`float`): total explained variance by a locus
+            alpha (`float`): total significance level for estimation of power
+            df (`float`): degree of freedom for test
 
         Returns:
-            power  (`float`): power under model2 for burden test
+           power (`float`): estimated power under this variance component model.
 
         """
         assert ws.ndim == 1
-        assert ws.size == ps.size
-        assert (prop_causal > 0.0) & (prop_causal <= 1.0)
-        assert (prop_risk > 0.0) & (prop_risk <= 1.0)
-        j = ws.size
-        jc = j * prop_causal
-        jd = jc * prop_risk
-        jp = jc * (1.0 - prop_risk)
-        ncp = self.ncp_burden_test_model2(ws, ps, jd=jd, jp=jp, n=n, tev=tev)
-        return self.llr_power(alpha=alpha, ncp=ncp)
-
-    def power_burden_model2_real(self, n=100, nreps=10, test="SKAT", **kwargs):
-        """Estimate power under model 2 with realistic numbers of variants per gene.
-
-        Args:
-            n (`int`): number of samples.
-            nreps (`int`): number of replicates.
-            test (`string`): type of weighting scheme for allele frequencies.
-
-        Returns:
-            est_power (`np.array`): array of power estimates based on realistic number of variants.
-
-        """
-        assert n > 0
-        assert nreps > 0
-        est_power = np.zeros(nreps)
-        for i in range(nreps):
-            # Simulating the number of variants per-gene.
-            j = self.sim_var_per_gene(seed=(i + 1))
-            # Simulating the weights and allele frequencies.
-            ws, ps = self.sim_af_weights(j=j, n=n, clip=True, test=test, seed=(i + 1))
-            est_power[i] = self.power_burden_model2(ws=ws, ps=ps, n=n, **kwargs)
-        return est_power
+        assert ps.ndim == 1
+        assert n > 1
+        assert tev >= 0
+        c10, c20, _, _, df0, ncp0 = self.ncp_vc_first_order_model1(ws, ps, n, 0.0)
+        c11, c21, _, _, df1, ncp = self.ncp_vc_first_order_model1(ws, ps, n, tev)
+        ct = ncx2.ppf(1.0 - alpha, df=df0, nc=ncp0)
+        mux = df0 + ncp0
+        muq = c10
+        sigmax = np.sqrt(2 * (df0 + 2 * ncp0))
+        sigmaq = np.sqrt(2 * c20)
+        ctt = sigmaq / sigmax * (ct - mux) + muq
+        mux = df1 + ncp
+        muq = c11
+        sigmax = np.sqrt(2 * (df1 + 2 * ncp))
+        sigmaq = np.sqrt(2 * c21)
+        ctt = sigmax / sigmaq * (ctt - muq) + mux
+        power = ncx2.sf(ctt, df=df1, nc=ncp)
+        return power
