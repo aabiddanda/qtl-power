@@ -1,10 +1,11 @@
 __pycache__/
 .ipynb_checkpoints/
 .hypothesis/
-.coverage
+.coverage*
 sandbox/
 build/
 qtl_power.egg-info/
 .DS_Store
 docs/_build/
 docs/stubs/
+dist/*
