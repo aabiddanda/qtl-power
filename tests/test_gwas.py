@@ -22,11 +22,11 @@ def test_llr_power(a, d, ncp):
 
 @given(
     n=st.integers(min_value=1),
-    p=st.floats(min_value=0.0, max_value=1.0),
+    p=st.floats(min_value=0.0, max_value=1.0, exclude_min=True, exclude_max=True),
     beta=st.floats(
         min_value=-1e6, max_value=1e6, allow_infinity=False, allow_nan=False
     ),
-    r2=st.floats(min_value=0.0, max_value=1.0),
+    r2=st.floats(min_value=0.0, max_value=1.0, exclude_min=True),
 )
 def test_ncp_quant(n, p, beta, r2):
     """Test that the non-centrality parameter is calculatable."""
@@ -36,12 +36,12 @@ def test_ncp_quant(n, p, beta, r2):
 
 @given(
     n=st.integers(min_value=1),
-    p=st.floats(min_value=0.0, max_value=1.0),
+    p=st.floats(min_value=0.0, max_value=1.0, exclude_min=True, exclude_max=True),
     beta=st.floats(
         min_value=-1e6, max_value=1e6, allow_infinity=False, allow_nan=False
     ),
-    r2=st.floats(min_value=0.0, max_value=1.0),
-    alpha=st.floats(exclude_min=True, exclude_max=True, min_value=0.0, max_value=1.0),
+    r2=st.floats(min_value=0.0, max_value=1.0, exclude_min=True),
+    alpha=st.floats(min_value=0.0, max_value=1.0, exclude_min=True, exclude_max=True),
 )
 def test_quant_trait_power(n, p, beta, r2, alpha):
     """Test the function to obtain power under a quantitative model."""

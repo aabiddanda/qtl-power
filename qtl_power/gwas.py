@@ -45,8 +45,8 @@ class GwasQuant(Gwas):
 
         """
         assert n > 0
-        assert (p >= 0.0) and (p <= 1.0)
-        assert (r2 >= 0) & (r2 <= 1.0)
+        assert (p > 0.0) and (p < 1.0)
+        assert (r2 > 0) & (r2 <= 1.0)
         ncp = r2 * n * 2 * p * (1.0 - p) * (beta**2)
         return ncp
 
