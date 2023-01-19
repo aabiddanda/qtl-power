@@ -205,3 +205,29 @@ def test_ncp_vc_first_order_model1(j, n, tev, test):
     ws, ps = obj.sim_af_weights(j=j, test=test)
     _, _, _, _, df, ncp = obj.ncp_vc_first_order_model1(ws, ps, n=n, tev=tev)
     assert ncp >= 0
+
+
+@given(
+    j=st.integers(min_value=1, max_value=10000),
+    n=st.integers(min_value=100, max_value=10000),
+    tev=st.floats(
+        min_value=1e-4,
+        max_value=1,
+        exclude_max=True,
+        allow_infinity=False,
+        allow_nan=False,
+    ),
+    alpha=st.floats(
+        min_value=1e-32, max_value=5e-2, allow_infinity=False, allow_nan=False
+    ),
+    test=st.sampled_from(["SKAT", "Calpha", "Hotelling"]),
+    df=st.integers(min_value=1, max_value=10),
+)
+@settings(deadline=None, max_examples=100)
+def test_power_vc_first_order_model1(j, n, tev, alpha, test, df):
+    """Test power for variance component model 1."""
+    obj = RareVariantVCPower()
+    ws, ps = obj.sim_af_weights(j=j, test=test)
+    power = obj.power_vc_first_order_model1(ws, ps, n, tev, alpha, df)
+    if ~np.isnan(power):
+        assert (power >= 0) & (power <= 1)
