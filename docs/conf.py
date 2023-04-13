@@ -12,7 +12,7 @@ sys.path.insert(0, os.path.abspath("../qtl_power/"))
 
 project = "qtl-power"
 copyright = "2022, Arjun Biddanda"
-author = "Arjun Biddanda, 54gene"
+author = "Arjun Biddanda"
 release = "0.0.1a"
 
 # -- General configuration ---------------------------------------------------
@@ -40,5 +40,5 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 html_theme = "sphinx_rtd_theme"
 html_static_path = ["source/_static"]
-html_logo = "images/54gene_logo.png"
-html_css_files = ["custom.css"]
+# html_logo = "images/54gene_logo.png"
+# html_css_files = ["custom.css"]
