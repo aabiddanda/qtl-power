@@ -1,0 +1,6 @@
+﻿gwas
+====
+
+.. currentmodule:: gwas
+
+.. automodule:: gwas

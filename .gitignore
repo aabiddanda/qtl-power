@@ -6,6 +6,6 @@ sandbox/
 build/
 qtl_power.egg-info/
 .DS_Store
-docs/_build/
-docs/stubs/
+docsrc/_build/
+docsrc/stubs/
 dist/*

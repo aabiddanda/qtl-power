@@ -19,8 +19,16 @@ If you are primarily interested in a more interactive experience, you can immedi
 
 ## Documentation
 
-**TBD: read the docs will be incoming**
+Currently the documentaton is held in the `/docs` directory and is built using [`Sphinx`](https://www.sphinx-doc.org/en/master/). To rebuild the documentation:
 
+```
+cd docsrc
+make clean html copy
+cd ..
+git add docs/
+```
+
+then create a commit that will create an updated set of documentation. 
 
 ## References
 

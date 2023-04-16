@@ -1,0 +1,906 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>qtl_power package &mdash; qtl-power 0.0.1a documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Changelog" href="changelog.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="testing.html">Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">qtl_power package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-qtl_power">Module contents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-qtl_power.extreme_pheno">qtl_power.extreme_pheno module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#qtl_power.extreme_pheno.ExtremePhenotype"><code class="docutils literal notranslate"><span class="pre">ExtremePhenotype</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#qtl_power.extreme_pheno.ExtremePhenotype.est_power_extreme_pheno"><code class="docutils literal notranslate"><span class="pre">ExtremePhenotype.est_power_extreme_pheno()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#qtl_power.extreme_pheno.ExtremePhenotype.sim_extreme_pheno"><code class="docutils literal notranslate"><span class="pre">ExtremePhenotype.sim_extreme_pheno()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-qtl_power.gwas">qtl_power.gwas module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#qtl_power.gwas.Gwas"><code class="docutils literal notranslate"><span class="pre">Gwas</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#qtl_power.gwas.Gwas.llr_power"><code class="docutils literal notranslate"><span class="pre">Gwas.llr_power()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#qtl_power.gwas.GwasBinary"><code class="docutils literal notranslate"><span class="pre">GwasBinary</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#qtl_power.gwas.GwasBinary.binary_trait_beta_power"><code class="docutils literal notranslate"><span class="pre">GwasBinary.binary_trait_beta_power()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#qtl_power.gwas.GwasBinary.binary_trait_opt_n"><code class="docutils literal notranslate"><span class="pre">GwasBinary.binary_trait_opt_n()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#qtl_power.gwas.GwasBinary.binary_trait_power"><code class="docutils literal notranslate"><span class="pre">GwasBinary.binary_trait_power()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#qtl_power.gwas.GwasBinary.ncp_binary"><code class="docutils literal notranslate"><span class="pre">GwasBinary.ncp_binary()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#qtl_power.gwas.GwasBinaryModel"><code class="docutils literal notranslate"><span class="pre">GwasBinaryModel</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#qtl_power.gwas.GwasBinaryModel.binary_trait_beta_power_model"><code class="docutils literal notranslate"><span class="pre">GwasBinaryModel.binary_trait_beta_power_model()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#qtl_power.gwas.GwasBinaryModel.binary_trait_power_model"><code class="docutils literal notranslate"><span class="pre">GwasBinaryModel.binary_trait_power_model()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#qtl_power.gwas.GwasBinaryModel.ncp_binary_model"><code class="docutils literal notranslate"><span class="pre">GwasBinaryModel.ncp_binary_model()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#qtl_power.gwas.GwasQuant"><code class="docutils literal notranslate"><span class="pre">GwasQuant</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#qtl_power.gwas.GwasQuant.ncp_quant"><code class="docutils literal notranslate"><span class="pre">GwasQuant.ncp_quant()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#qtl_power.gwas.GwasQuant.quant_trait_beta_power"><code class="docutils literal notranslate"><span class="pre">GwasQuant.quant_trait_beta_power()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#qtl_power.gwas.GwasQuant.quant_trait_opt_n"><code class="docutils literal notranslate"><span class="pre">GwasQuant.quant_trait_opt_n()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#qtl_power.gwas.GwasQuant.quant_trait_power"><code class="docutils literal notranslate"><span class="pre">GwasQuant.quant_trait_power()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-qtl_power.rare_variants">qtl_power.rare_variants module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#qtl_power.rare_variants.RareVariantBurdenPower"><code class="docutils literal notranslate"><span class="pre">RareVariantBurdenPower</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#qtl_power.rare_variants.RareVariantBurdenPower.ncp_burden_test_model1"><code class="docutils literal notranslate"><span class="pre">RareVariantBurdenPower.ncp_burden_test_model1()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#qtl_power.rare_variants.RareVariantBurdenPower.opt_n_burden_model1"><code class="docutils literal notranslate"><span class="pre">RareVariantBurdenPower.opt_n_burden_model1()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#qtl_power.rare_variants.RareVariantBurdenPower.power_burden_model1"><code class="docutils literal notranslate"><span class="pre">RareVariantBurdenPower.power_burden_model1()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#qtl_power.rare_variants.RareVariantBurdenPower.power_burden_model1_real"><code class="docutils literal notranslate"><span class="pre">RareVariantBurdenPower.power_burden_model1_real()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#qtl_power.rare_variants.RareVariantBurdenPower.tev_power_burden_model1"><code class="docutils literal notranslate"><span class="pre">RareVariantBurdenPower.tev_power_burden_model1()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#qtl_power.rare_variants.RareVariantPower"><code class="docutils literal notranslate"><span class="pre">RareVariantPower</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#qtl_power.rare_variants.RareVariantPower.llr_power"><code class="docutils literal notranslate"><span class="pre">RareVariantPower.llr_power()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#qtl_power.rare_variants.RareVariantPower.sim_af_weights"><code class="docutils literal notranslate"><span class="pre">RareVariantPower.sim_af_weights()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#qtl_power.rare_variants.RareVariantPower.sim_var_per_gene"><code class="docutils literal notranslate"><span class="pre">RareVariantPower.sim_var_per_gene()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#qtl_power.rare_variants.RareVariantVCPower"><code class="docutils literal notranslate"><span class="pre">RareVariantVCPower</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#qtl_power.rare_variants.RareVariantVCPower.match_cumulants_ncp"><code class="docutils literal notranslate"><span class="pre">RareVariantVCPower.match_cumulants_ncp()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#qtl_power.rare_variants.RareVariantVCPower.ncp_vc_first_order_model1"><code class="docutils literal notranslate"><span class="pre">RareVariantVCPower.ncp_vc_first_order_model1()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#qtl_power.rare_variants.RareVariantVCPower.power_vc_first_order_model1"><code class="docutils literal notranslate"><span class="pre">RareVariantVCPower.power_vc_first_order_model1()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">qtl-power</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>qtl_power package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/qtl_power.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <section id="qtl-power-package">
+<h1>qtl_power package<a class="headerlink" href="#qtl-power-package" title="Permalink to this heading">¶</a></h1>
+<section id="module-qtl_power">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-qtl_power" title="Permalink to this heading">¶</a></h2>
+<p>Initialization of qtl-power module.</p>
+</section>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading">¶</a></h2>
+</section>
+<section id="module-qtl_power.extreme_pheno">
+<span id="qtl-power-extreme-pheno-module"></span><h2>qtl_power.extreme_pheno module<a class="headerlink" href="#module-qtl_power.extreme_pheno" title="Permalink to this heading">¶</a></h2>
+<p>Power calculations for extreme phenotype sampling designs.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="qtl_power.extreme_pheno.ExtremePhenotype">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qtl_power.extreme_pheno.</span></span><span class="sig-name descname"><span class="pre">ExtremePhenotype</span></span><a class="headerlink" href="#qtl_power.extreme_pheno.ExtremePhenotype" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Class defining extreme phenotype designs.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="qtl_power.extreme_pheno.ExtremePhenotype.est_power_extreme_pheno">
+<span class="sig-name descname"><span class="pre">est_power_extreme_pheno</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">niter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">q0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">q1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qtl_power.extreme_pheno.ExtremePhenotype.est_power_extreme_pheno" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimate the power from an extreme-phenotype sampling design.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n</strong> (<cite>int</cite>) – total sample size.</p></li>
+<li><p><strong>maf</strong> (<cite>float</cite>) – minor allele frequency of tested variant.</p></li>
+<li><p><strong>beta</strong> (<cite>float</cite>) – effect-size in standard deviations.</p></li>
+<li><p><strong>niter</strong> (<cite>int</cite>) – number of simulation iterations.</p></li>
+<li><p><strong>alpha</strong> (<cite>float</cite>) – significance threshold for Fishers Exact Test.</p></li>
+<li><p><strong>q0</strong> (<cite>float</cite>) – bottom quantile to establish as controls (or low-extremes).</p></li>
+<li><p><strong>q1</strong> (<cite>float</cite>) – upper quantile to establish as cases (or upper extremes).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>power of extreme sampling design</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>power (<cite>float</cite>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qtl_power.extreme_pheno.ExtremePhenotype.sim_extreme_pheno">
+<span class="sig-name descname"><span class="pre">sim_extreme_pheno</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">42</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qtl_power.extreme_pheno.ExtremePhenotype.sim_extreme_pheno" title="Permalink to this definition">¶</a></dt>
+<dd><p>Simulate an extreme phenotype under an HWE assumption.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n</strong> (<cite>int</cite>) – total sample size.</p></li>
+<li><p><strong>maf</strong> (<cite>float</cite>) – minor allele frequency of tested variant.</p></li>
+<li><p><strong>beta</strong> (<cite>float</cite>) – effect-size in standard deviations.</p></li>
+<li><p><strong>seed</strong> (<cite>int</cite>) – random seed for simulations.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>vector of allele-counts.
+phenotypes (<cite>np.array</cite>): quantitative phenotypes.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>allele_count (<cite>np.array</cite>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-qtl_power.gwas">
+<span id="qtl-power-gwas-module"></span><h2>qtl_power.gwas module<a class="headerlink" href="#module-qtl_power.gwas" title="Permalink to this heading">¶</a></h2>
+<p>Functions to calculate power in GWAS designs.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="qtl_power.gwas.Gwas">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qtl_power.gwas.</span></span><span class="sig-name descname"><span class="pre">Gwas</span></span><a class="headerlink" href="#qtl_power.gwas.Gwas" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Parent class for GWAS Power calculation.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="qtl_power.gwas.Gwas.llr_power">
+<span class="sig-name descname"><span class="pre">llr_power</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5e-08</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ncp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qtl_power.gwas.Gwas.llr_power" title="Permalink to this definition">¶</a></dt>
+<dd><p>Power under a non-central chi-squared distribution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>alpha</strong> (<cite>float</cite>) – p-value threshold for GWAS</p></li>
+<li><p><strong>df</strong> (<cite>int</cite>) – degrees of freedom</p></li>
+<li><p><strong>ncp</strong> (<cite>float</cite>) – non-centrality parameter</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>power for association</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>power (<cite>float</cite>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="qtl_power.gwas.GwasBinary">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qtl_power.gwas.</span></span><span class="sig-name descname"><span class="pre">GwasBinary</span></span><a class="headerlink" href="#qtl_power.gwas.GwasBinary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#qtl_power.gwas.Gwas" title="qtl_power.gwas.Gwas"><code class="xref py py-class docutils literal notranslate"><span class="pre">Gwas</span></code></a></p>
+<p>GWAS Power calculator for Case/Control study design.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="qtl_power.gwas.GwasBinary.binary_trait_beta_power">
+<span class="sig-name descname"><span class="pre">binary_trait_beta_power</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5e-08</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prop_cases</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qtl_power.gwas.GwasBinary.binary_trait_beta_power" title="Permalink to this definition">¶</a></dt>
+<dd><p>Optimal detectable effect-size under a case-control GWAS study design.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n</strong> (<cite>int</cite>) – sample-size of unrelated individuals.</p></li>
+<li><p><strong>power</strong> (<cite>float</cite>) – <p>.</p>
+</p></li>
+<li><p><strong>beta</strong> (<cite>float</cite>) – effect-size of variant.</p></li>
+<li><p><strong>r2</strong> (<cite>float</cite>) – correlation r2 between causal variant and tag variant.</p></li>
+<li><p><strong>alpha</strong> (<cite>float</cite>) – p-value threshold for detection.</p></li>
+<li><p><strong>prop_cases</strong> (<cite>float</cite>) – proportion of samples that are cases.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>non-centrality parameter.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ncp  (<cite>float</cite>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qtl_power.gwas.GwasBinary.binary_trait_opt_n">
+<span class="sig-name descname"><span class="pre">binary_trait_opt_n</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5e-08</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prop_cases</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qtl_power.gwas.GwasBinary.binary_trait_opt_n" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine the sample-size required to detect this effect.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>beta</strong> (<cite>float</cite>) – effect-size of the variant.</p></li>
+<li><p><strong>power</strong> (<cite>float</cite>) – threshold power level.</p></li>
+<li><p><strong>p</strong> (<cite>float</cite>) – minor allele frequency of variant.</p></li>
+<li><p><strong>r2</strong> (<cite>float</cite>) – correlation r2 between causal variant and tagging variant.</p></li>
+<li><p><strong>alpha</strong> (<cite>float</cite>) – p-value threshold for GWAS</p></li>
+<li><p><strong>prop_cases</strong> (<cite>float</cite>) – proportion of cases in the dataset</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>optimal sample size for detection at this power-level.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>opt_n  (<cite>float</cite>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qtl_power.gwas.GwasBinary.binary_trait_power">
+<span class="sig-name descname"><span class="pre">binary_trait_power</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5e-08</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prop_cases</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qtl_power.gwas.GwasBinary.binary_trait_power" title="Permalink to this definition">¶</a></dt>
+<dd><p>Power under a case-control GWAS study design.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n</strong> (<cite>int</cite>) – sample-size of unrelated individuals.</p></li>
+<li><p><strong>p</strong> (<cite>float</cite>) – minor allele frequency of variant.</p></li>
+<li><p><strong>beta</strong> (<cite>float</cite>) – effect-size of variant.</p></li>
+<li><p><strong>r2</strong> (<cite>float</cite>) – correlation r2 between causal variant and tagging variant.</p></li>
+<li><p><strong>alpha</strong> (<cite>float</cite>) – p-value threshold for detection.</p></li>
+<li><p><strong>prop_cases</strong> (<cite>float</cite>) – proportion of samples that are cases.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>non-centrality parameter.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ncp  (<cite>float</cite>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qtl_power.gwas.GwasBinary.ncp_binary">
+<span class="sig-name descname"><span class="pre">ncp_binary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prop_cases</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qtl_power.gwas.GwasBinary.ncp_binary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine the effect-size required to detect an association at this MAF.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n</strong> (<cite>int</cite>) – sample-size of unrelated individuals.</p></li>
+<li><p><strong>p</strong> (<cite>float</cite>) – minor allele frequency of variant.</p></li>
+<li><p><strong>beta</strong> (<cite>float</cite>) – effect-size of variant.</p></li>
+<li><p><strong>r2</strong> (<cite>float</cite>) – correlation r2 between causal variant and tagging variant.</p></li>
+<li><p><strong>prop_cases</strong> (<cite>float</cite>) – proportion of samples that are cases.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>non-centrality parameter.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ncp  (<cite>float</cite>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="qtl_power.gwas.GwasBinaryModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qtl_power.gwas.</span></span><span class="sig-name descname"><span class="pre">GwasBinaryModel</span></span><a class="headerlink" href="#qtl_power.gwas.GwasBinaryModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#qtl_power.gwas.Gwas" title="qtl_power.gwas.Gwas"><code class="xref py py-class docutils literal notranslate"><span class="pre">Gwas</span></code></a></p>
+<p>GWAS Power calculations under different encodings of genotypic risk.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="qtl_power.gwas.GwasBinaryModel.binary_trait_beta_power_model">
+<span class="sig-name descname"><span class="pre">binary_trait_beta_power_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'additive'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prev</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5e-08</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prop_cases</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qtl_power.gwas.GwasBinaryModel.binary_trait_beta_power_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Threshold effects under a specific power threshold and genetic model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n</strong> (<cite>int</cite>) – sample-size of unrelated individuals.</p></li>
+<li><p><strong>p</strong> (<cite>float</cite>) – minor allele frequency of variant.</p></li>
+<li><p><strong>beta</strong> (<cite>float</cite>) – effect-size of variant (in terms of relative-risk).</p></li>
+<li><p><strong>model</strong> (<cite>string</cite>) – genetic model for effects (additive, recessive, or dominant).</p></li>
+<li><p><strong>prev</strong> (<cite>float</cite>) – prevalence of the trait in question.</p></li>
+<li><p><strong>alpha</strong> (<cite>float</cite>) – p-value threshold for detection.</p></li>
+<li><p><strong>prop_cases</strong> (<cite>float</cite>) – proportion of samples that are cases.</p></li>
+<li><p><strong>power</strong> (<cite>float</cite>) – power under the model.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>detectable effect-size at the power threshold and model.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>opt_beta (<cite>float</cite>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qtl_power.gwas.GwasBinaryModel.binary_trait_power_model">
+<span class="sig-name descname"><span class="pre">binary_trait_power_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'additive'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prev</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5e-08</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prop_cases</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qtl_power.gwas.GwasBinaryModel.binary_trait_power_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Power under a case-control GWAS study design.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n</strong> (<cite>int</cite>) – sample-size of unrelated individuals.</p></li>
+<li><p><strong>p</strong> (<cite>float</cite>) – minor allele frequency of variant.</p></li>
+<li><p><strong>beta</strong> (<cite>float</cite>) – effect-size of variant (in terms of relative-risk).</p></li>
+<li><p><strong>model</strong> (<cite>string</cite>) – genetic model for effects (additive, recessive, or dominant).</p></li>
+<li><p><strong>prev</strong> (<cite>float</cite>) – prevalence of the trait in question.</p></li>
+<li><p><strong>alpha</strong> (<cite>float</cite>) – p-value threshold for detection.</p></li>
+<li><p><strong>prop_cases</strong> (<cite>float</cite>) – proportion of samples that are cases.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>power under the model.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>power (<cite>float</cite>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qtl_power.gwas.GwasBinaryModel.ncp_binary_model">
+<span class="sig-name descname"><span class="pre">ncp_binary_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'additive'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prev</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5e-08</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prop_cases</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qtl_power.gwas.GwasBinaryModel.ncp_binary_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Explore how multiple models affect power in case-control traits.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="qtl_power.gwas.GwasQuant">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qtl_power.gwas.</span></span><span class="sig-name descname"><span class="pre">GwasQuant</span></span><a class="headerlink" href="#qtl_power.gwas.GwasQuant" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#qtl_power.gwas.Gwas" title="qtl_power.gwas.Gwas"><code class="xref py py-class docutils literal notranslate"><span class="pre">Gwas</span></code></a></p>
+<p>Class for power calculations of a GWAS for a quantitative trait.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="qtl_power.gwas.GwasQuant.ncp_quant">
+<span class="sig-name descname"><span class="pre">ncp_quant</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qtl_power.gwas.GwasQuant.ncp_quant" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the non-centrality parameter for a quantitative trait GWAS.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n</strong> (<cite>int</cite>) – sample-size of unrelated individuals.</p></li>
+<li><p><strong>p</strong> (<cite>float</cite>) – minor allele frequency of variant.</p></li>
+<li><p><strong>beta</strong> (<cite>float</cite>) – effect-size of variant.</p></li>
+<li><p><strong>r2</strong> (<cite>float</cite>) – correlation r2 between causal variant and tagging variant.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>non-centrality parameter.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ncp (<cite>float</cite>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qtl_power.gwas.GwasQuant.quant_trait_beta_power">
+<span class="sig-name descname"><span class="pre">quant_trait_beta_power</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5e-08</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qtl_power.gwas.GwasQuant.quant_trait_beta_power" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine the effect-size required to detect an association at this MAF.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n</strong> (<cite>int</cite>) – sample-size of unrelated individuals.</p></li>
+<li><p><strong>power</strong> (<cite>float</cite>) – threshold power level.</p></li>
+<li><p><strong>p</strong> (<cite>float</cite>) – minor allele frequency of variant.</p></li>
+<li><p><strong>r2</strong> (<cite>float</cite>) – correlation r2 between causal variant and tagging variant.</p></li>
+<li><p><strong>alpha</strong> (<cite>float</cite>) – p-value threshold for GWAS</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>optimal beta for detection at a specific power level</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>opt_beta  (<cite>float</cite>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qtl_power.gwas.GwasQuant.quant_trait_opt_n">
+<span class="sig-name descname"><span class="pre">quant_trait_opt_n</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5e-08</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qtl_power.gwas.GwasQuant.quant_trait_opt_n" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine the sample-size required to detect this effect.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>beta</strong> (<cite>float</cite>) – effect-size of the variant.</p></li>
+<li><p><strong>power</strong> (<cite>float</cite>) – threshold power level.</p></li>
+<li><p><strong>p</strong> (<cite>float</cite>) – minor allele frequency of variant.</p></li>
+<li><p><strong>r2</strong> (<cite>float</cite>) – correlation r2 between causal variant and tagging variant.</p></li>
+<li><p><strong>alpha</strong> (<cite>float</cite>) – p-value threshold for GWAS</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>optimal sample size for detection at this power-level.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>opt_n  (<cite>float</cite>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qtl_power.gwas.GwasQuant.quant_trait_power">
+<span class="sig-name descname"><span class="pre">quant_trait_power</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5e-08</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qtl_power.gwas.GwasQuant.quant_trait_power" title="Permalink to this definition">¶</a></dt>
+<dd><p>Power for a quantitative trait association study.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n</strong> (<cite>int</cite>) – sample-size of unrelated individuals.</p></li>
+<li><p><strong>p</strong> (<cite>float</cite>) – minor allele frequency of variant.</p></li>
+<li><p><strong>beta</strong> (<cite>float</cite>) – effect-size of variant.</p></li>
+<li><p><strong>r2</strong> (<cite>float</cite>) – correlation r2 between causal variant and tagging variant.</p></li>
+<li><p><strong>alpha</strong> (<cite>float</cite>) – p-value threshold for GWAS</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>non-centrality parameter.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ncp (<cite>float</cite>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-qtl_power.rare_variants">
+<span id="qtl-power-rare-variants-module"></span><h2>qtl_power.rare_variants module<a class="headerlink" href="#module-qtl_power.rare_variants" title="Permalink to this heading">¶</a></h2>
+<p>Estimating power for rare-variant association methods from PAGEANT.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="qtl_power.rare_variants.RareVariantBurdenPower">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qtl_power.rare_variants.</span></span><span class="sig-name descname"><span class="pre">RareVariantBurdenPower</span></span><a class="headerlink" href="#qtl_power.rare_variants.RareVariantBurdenPower" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#qtl_power.rare_variants.RareVariantPower" title="qtl_power.rare_variants.RareVariantPower"><code class="xref py py-class docutils literal notranslate"><span class="pre">RareVariantPower</span></code></a></p>
+<p>Approximation of power for rare-variant burden tests based on results from Derkach et al (2018).</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="qtl_power.rare_variants.RareVariantBurdenPower.ncp_burden_test_model1">
+<span class="sig-name descname"><span class="pre">ncp_burden_test_model1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">j</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jd</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tev</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qtl_power.rare_variants.RareVariantBurdenPower.ncp_burden_test_model1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Approximation of the non-centrality parameter under model S1 from Derkach et al.</p>
+<p>The key assumption in this case is that there is independence between an alleles effect-size and its MAF.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n</strong> (<cite>int</cite>) – total sample size.</p></li>
+<li><p><strong>j</strong> (<cite>int</cite>) – total number of variants in the gene.</p></li>
+<li><p><strong>jd</strong> (<cite>int</cite>) – number of disease variants in the gene.</p></li>
+<li><p><strong>jp</strong> (<cite>int</cite>) – number of protective variants in the gene.</p></li>
+<li><p><strong>tev</strong> (<cite>float</cite>) – proportion of variance explained by gene.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>non-centrality parameter.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ncp (<cite>float</cite>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qtl_power.rare_variants.RareVariantBurdenPower.opt_n_burden_model1">
+<span class="sig-name descname"><span class="pre">opt_n_burden_model1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">j</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tev</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prop_causal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prop_risk</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.8</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qtl_power.rare_variants.RareVariantBurdenPower.opt_n_burden_model1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimate the sample-size required for detection of supplied TEV in a region.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>j</strong> (<cite>int</cite>) – total number of variants in the gene.</p></li>
+<li><p><strong>tev</strong> (<cite>float</cite>) – proportion of variance explained by gene.</p></li>
+<li><p><strong>prop_causal</strong> (<cite>float</cite>) – proportion of causal variants.</p></li>
+<li><p><strong>prop_risk</strong> (<cite>float</cite>) – number of protective variants.</p></li>
+<li><p><strong>alpha</strong> (<cite>float</cite>) – p-value threshold for power.</p></li>
+<li><p><strong>power</strong> (<cite>float</cite>) – power for detection under the burden model.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>TEV required for detection at this rate.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>opt_tev (<cite>float</cite>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qtl_power.rare_variants.RareVariantBurdenPower.power_burden_model1">
+<span class="sig-name descname"><span class="pre">power_burden_model1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">j</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prop_causal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prop_risk</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tev</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qtl_power.rare_variants.RareVariantBurdenPower.power_burden_model1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimate the power under a burden model 1 from PAGEANT.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n</strong> (<cite>int</cite>) – total sample size.</p></li>
+<li><p><strong>j</strong> (<cite>int</cite>) – total number of variants in the gene.</p></li>
+<li><p><strong>prop_causal</strong> (<cite>float</cite>) – proportion of causal variants.</p></li>
+<li><p><strong>prop_risk</strong> (<cite>float</cite>) – number of protective variants.</p></li>
+<li><p><strong>tev</strong> (<cite>float</cite>) – proportion of variance explained by gene.</p></li>
+<li><p><strong>alpha</strong> (<cite>float</cite>) – p-value threshold for power.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>power for detection under the burden model.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>power (<cite>float</cite>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qtl_power.rare_variants.RareVariantBurdenPower.power_burden_model1_real">
+<span class="sig-name descname"><span class="pre">power_burden_model1_real</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nreps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qtl_power.rare_variants.RareVariantBurdenPower.power_burden_model1_real" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimate power under model 1 from PAGEANT with realistic variants per gene.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n</strong> (<cite>int</cite>) – number of samples</p></li>
+<li><p><strong>nreps</strong> (<cite>int</cite>) – number of replicates</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>array of power estimates based on realistic number of variants.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>est_power (<cite>np.array</cite>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qtl_power.rare_variants.RareVariantBurdenPower.tev_power_burden_model1">
+<span class="sig-name descname"><span class="pre">tev_power_burden_model1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">j</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prop_causal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prop_risk</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.8</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qtl_power.rare_variants.RareVariantBurdenPower.tev_power_burden_model1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimate the total explained variance by a region for adequate detection at a power threshold.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n</strong> (<cite>int</cite>) – total sample size.</p></li>
+<li><p><strong>j</strong> (<cite>int</cite>) – total number of variants in the gene.</p></li>
+<li><p><strong>prop_causal</strong> (<cite>float</cite>) – proportion of causal variants.</p></li>
+<li><p><strong>prop_risk</strong> (<cite>float</cite>) – number of protective variants.</p></li>
+<li><p><strong>alpha</strong> (<cite>float</cite>) – p-value threshold for power.</p></li>
+<li><p><strong>power</strong> (<cite>float</cite>) – power for detection under the burden model.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>TEV required for detection at this rate.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>opt_tev (<cite>float</cite>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="qtl_power.rare_variants.RareVariantPower">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qtl_power.rare_variants.</span></span><span class="sig-name descname"><span class="pre">RareVariantPower</span></span><a class="headerlink" href="#qtl_power.rare_variants.RareVariantPower" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Power calculator for rare-variant power.</p>
+<p>Methods based on derivations from [PAGEANT](<a class="reference external" href="https://doi.org/10.1093/bioinformatics/btx770">https://doi.org/10.1093/bioinformatics/btx770</a>)</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="qtl_power.rare_variants.RareVariantPower.llr_power">
+<span class="sig-name descname"><span class="pre">llr_power</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ncp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ncp0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qtl_power.rare_variants.RareVariantPower.llr_power" title="Permalink to this definition">¶</a></dt>
+<dd><p>Power under a non-central chi-squared distribution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>alpha</strong> (<cite>float</cite>) – p-value threshold for GWAS</p></li>
+<li><p><strong>df</strong> (<cite>int</cite>) – degrees of freedom</p></li>
+<li><p><strong>ncp</strong> (<cite>float</cite>) – non-centrality parameter</p></li>
+<li><p><strong>ncp0</strong> (<cite>float</cite>) – null non-centrality parameter</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>power for association</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>power (<cite>float</cite>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qtl_power.rare_variants.RareVariantPower.sim_af_weights">
+<span class="sig-name descname"><span class="pre">sim_af_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">j</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1846</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">11.1248</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clip</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">42</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'SKAT'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qtl_power.rare_variants.RareVariantPower.sim_af_weights" title="Permalink to this definition">¶</a></dt>
+<dd><p>Simulate allele frequencies from a beta distribution.</p>
+<p>Ideally the beta distribution is derived from realized allele frequencies.
+The current parameters are based on 15k African ancestry individuals.
+For mimicing a much larger set (112k) of Non-Finnish European individuals,
+use the parameters a1=0.14311324240262455, b1=26.97369198989023,</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>j</strong> (<cite>int</cite>) – number of variants</p></li>
+<li><p><strong>a1</strong> (<cite>float</cite>) – shape parameter of the beta distribution</p></li>
+<li><p><strong>b1</strong> (<cite>float</cite>) – scale parameter of the beta distribution</p></li>
+<li><p><strong>n</strong> (<cite>float</cite>) – number of samples</p></li>
+<li><p><strong>clip</strong> (<cite>boolean</cite>) – perform clipping based on the current sample-size.</p></li>
+<li><p><strong>seed</strong> (<cite>int</cite>) – random seed.</p></li>
+<li><p><strong>test</strong> (<cite>string</cite>) – type of test to be performed (SKAT, Calpha, Hotelling)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>array of weights per-variant.
+ps (<cite>np.array</cite>): array of allele frequencies.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ws (<cite>np.array</cite>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qtl_power.rare_variants.RareVariantPower.sim_var_per_gene">
+<span class="sig-name descname"><span class="pre">sim_var_per_gene</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.47</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0108</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">42</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qtl_power.rare_variants.RareVariantPower.sim_var_per_gene" title="Permalink to this definition">¶</a></dt>
+<dd><p>Simulate the number of variants per-gene.</p>
+<p>Parameter values are derived from GnomAD Exonic variants on Chromosome 4 from ~15730 AFR ancestry subjects.</p>
+<p>For a Non-Finnish European ancestry setting with larger sample size (~112350), use a=1.44306, b=0.00372.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>a</strong> (<cite>float</cite>) – shape parameter for a gamma distribution</p></li>
+<li><p><strong>b</strong> (<cite>float</cite>) – scale parameter for a gamma distribution</p></li>
+<li><p><strong>seed</strong> (<cite>int</cite>) – random seed.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>number of variants per-gene.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>nvar (<cite>int</cite>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="qtl_power.rare_variants.RareVariantVCPower">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qtl_power.rare_variants.</span></span><span class="sig-name descname"><span class="pre">RareVariantVCPower</span></span><a class="headerlink" href="#qtl_power.rare_variants.RareVariantVCPower" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#qtl_power.rare_variants.RareVariantPower" title="qtl_power.rare_variants.RareVariantPower"><code class="xref py py-class docutils literal notranslate"><span class="pre">RareVariantPower</span></code></a></p>
+<p>Approximation of power for rare-variant variance component tests based on results from Derkach et al (2018).</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="qtl_power.rare_variants.RareVariantVCPower.match_cumulants_ncp">
+<span class="sig-name descname"><span class="pre">match_cumulants_ncp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">c1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c4</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qtl_power.rare_variants.RareVariantVCPower.match_cumulants_ncp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Obtain the degrees of freedom and non-centrality parameter from cumulants.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>c1</strong> (<cite>float</cite>) – first cumulant of non-central chi-squared dist.</p></li>
+<li><p><strong>c2</strong> (<cite>float</cite>) – second cumulant of non-central chi-squared dist.</p></li>
+<li><p><strong>c3</strong> (<cite>float</cite>) – third cumulant of non-central chi-squared dist.</p></li>
+<li><p><strong>c4</strong> (<cite>float</cite>) – fourth cumulant of non-central chi-squared dist.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>degrees of freedom for test.
+ncp (<cite>float</cite>): non-centrality parameter.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>df (<cite>int</cite>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qtl_power.rare_variants.RareVariantVCPower.ncp_vc_first_order_model1">
+<span class="sig-name descname"><span class="pre">ncp_vc_first_order_model1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ws</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tev</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qtl_power.rare_variants.RareVariantVCPower.ncp_vc_first_order_model1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Approximation of the non-centrality parameter under model S1 from Derkach et al.</p>
+<p>The key assumption is independence between an alleles effect-size and its MAF, from Table S1 in Derkach et al.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ws</strong> (<cite>np.array</cite>) – numpy array of weights per-variant</p></li>
+<li><p><strong>ps</strong> (<cite>np.array</cite>) – numpy array of allele frequencies</p></li>
+<li><p><strong>n</strong> (<cite>int</cite>) – sample size</p></li>
+<li><p><strong>tev</strong> (<cite>float</cite>) – total explained variance by a locus</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>degrees of freedom for variance component test
+ncp (<cite>float</cite>): non-centrality parameter</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>df (<cite>float</cite>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qtl_power.rare_variants.RareVariantVCPower.power_vc_first_order_model1">
+<span class="sig-name descname"><span class="pre">power_vc_first_order_model1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ws</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tev</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qtl_power.rare_variants.RareVariantVCPower.power_vc_first_order_model1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the power for detection under model 1 for a variance component test.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ws</strong> (<cite>np.array</cite>) – numpy array of weights per-variant</p></li>
+<li><p><strong>ps</strong> (<cite>np.array</cite>) – numpy array of allele frequencies</p></li>
+<li><p><strong>n</strong> (<cite>int</cite>) – sample size</p></li>
+<li><p><strong>tev</strong> (<cite>float</cite>) – total explained variance by a locus</p></li>
+<li><p><strong>alpha</strong> (<cite>float</cite>) – total significance level for estimation of power</p></li>
+<li><p><strong>df</strong> (<cite>float</cite>) – degree of freedom for test</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>estimated power under this variance component model.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>power (<cite>float</cite>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+           
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+          <a href="changelog.html" class="btn btn-neutral float-left" title="Changelog" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+      </div>
+
+    <hr/>
+
+    <div role="contentinfo">
+      <p>&#169; Copyright 2022, Arjun Biddanda.</p>
+    </div>
+
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a>
+      
+     
+  </footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

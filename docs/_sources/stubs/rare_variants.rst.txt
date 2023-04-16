@@ -1,0 +1,6 @@
+﻿rare\_variants
+==============
+
+.. currentmodule:: rare_variants
+
+.. automodule:: rare_variants
