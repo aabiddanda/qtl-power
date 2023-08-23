@@ -28,7 +28,7 @@ cd ..
 git add docs/
 ```
 
-then create a commit that will create an updated set of documentation. 
+then create a commit that will create an updated set of documentation.
 
 ## References
 

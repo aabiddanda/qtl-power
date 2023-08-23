@@ -1,6 +1,6 @@
 """Functions to calculate power in GWAS designs."""
 import numpy as np
-from scipy.optimize import brentq
+from scipy.optimize import root_scalar
 from scipy.stats import ncx2
 
 
@@ -63,8 +63,11 @@ class GwasQuant(Gwas):
             ncp (`float`): non-centrality parameter.
 
         """
-        ncp = self.ncp_quant(n, p, beta, r2)
-        return self.llr_power(alpha, df=1, ncp=ncp)
+        try:
+            ncp = self.ncp_quant(n, p, beta, r2)
+            return self.llr_power(alpha, df=1, ncp=ncp)
+        except OverflowError:
+            return np.nan
 
     def quant_trait_beta_power(self, n=100, power=0.90, p=0.1, r2=1.0, alpha=5e-8):
         """Determine the effect-size required to detect an association at this MAF.
@@ -85,7 +88,7 @@ class GwasQuant(Gwas):
             - power
         )
         try:
-            opt_beta = brentq(f, 0.0, 1e3)
+            opt_beta = root_scalar(f, bracket=(0.0, 1e3))
         except (OverflowError, ValueError):
             opt_beta = np.nan
         return opt_beta
@@ -110,7 +113,7 @@ class GwasQuant(Gwas):
             - power
         )
         try:
-            opt_n = brentq(f, 1.0, 1e24)
+            opt_n = root_scalar(f, bracket=(1e-24, 1e24))
         except (OverflowError, ValueError):
             opt_n = np.nan
         return opt_n
@@ -190,7 +193,7 @@ class GwasBinary(Gwas):
             - power
         )
         try:
-            opt_beta = brentq(f, 0.0, 1e3)
+            opt_beta = root_scalar(f, bracket=(0.0, 1e3))
         except (OverflowError, ValueError):
             opt_beta = np.nan
         return opt_beta
@@ -220,7 +223,7 @@ class GwasBinary(Gwas):
             - power
         )
         try:
-            opt_n = brentq(f, 1.0, 1e24)
+            opt_n = root_scalar(f, bracket=(1.0, 1e24))
         except (OverflowError, ValueError):
             opt_n = np.nan
         return opt_n
@@ -350,7 +353,7 @@ class GwasBinaryModel(Gwas):
             - power
         )
         try:
-            opt_beta = brentq(f, 0.0, 1e3)
+            opt_beta = root_scalar(f, bracket=(0.0, 1e3))
         except (OverflowError, ValueError):
             opt_beta = np.nan
         return opt_beta
