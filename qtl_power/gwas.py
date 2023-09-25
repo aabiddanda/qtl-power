@@ -88,7 +88,7 @@ class GwasQuant(Gwas):
             - power
         )
         try:
-            opt_beta = root_scalar(f, bracket=(0.0, 1e3))
+            opt_beta = root_scalar(f, bracket=(0.0, 1e3)).root
         except (OverflowError, ValueError):
             opt_beta = np.nan
         return opt_beta
@@ -113,7 +113,7 @@ class GwasQuant(Gwas):
             - power
         )
         try:
-            opt_n = root_scalar(f, bracket=(1e-24, 1e24))
+            opt_n = root_scalar(f, bracket=(1e-24, 1e24)).root
         except (OverflowError, ValueError):
             opt_n = np.nan
         return opt_n
@@ -193,7 +193,7 @@ class GwasBinary(Gwas):
             - power
         )
         try:
-            opt_beta = root_scalar(f, bracket=(0.0, 1e3))
+            opt_beta = root_scalar(f, bracket=(0.0, 1e3)).root
         except (OverflowError, ValueError):
             opt_beta = np.nan
         return opt_beta
@@ -223,7 +223,7 @@ class GwasBinary(Gwas):
             - power
         )
         try:
-            opt_n = root_scalar(f, bracket=(1.0, 1e24))
+            opt_n = root_scalar(f, bracket=(1.0, 1e24)).root
         except (OverflowError, ValueError):
             opt_n = np.nan
         return opt_n
