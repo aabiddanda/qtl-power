@@ -353,7 +353,7 @@ class GwasBinaryModel(Gwas):
             - power
         )
         try:
-            opt_beta = root_scalar(f, bracket=(0.0, 1e3))
+            opt_beta = root_scalar(f, bracket=(0.0, 1e3)).root
         except (OverflowError, ValueError):
             opt_beta = np.nan
         return opt_beta
