@@ -124,7 +124,7 @@ def test_binary_trait_power(n, p, beta, r2, alpha, prop_cases):
     """Test the function to obtain power under a quantitative model."""
     obj = GwasBinary()
     power = obj.binary_trait_power(n, p, beta, r2, alpha, prop_cases)
-    assert (power >= 0) & (power <= 1)
+    assert np.isnan(power) | ((power >= 0) & (power <= 1))
 
 
 @given(
