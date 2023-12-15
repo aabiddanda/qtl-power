@@ -230,7 +230,7 @@ def test_ncp_binary_model_bad_model(n, p, model, prev, alpha, prop_cases):
         allow_nan=False,
     ),
 )
-@settings(deadline=None, max_examples=20)
+@settings(deadline=None, max_examples=200)
 def test_binary_trait_power_model(n, p, model, prev, alpha, prop_cases):
     """Test NCP generation under different genetic models."""
     obj = GwasBinaryModel()
@@ -255,7 +255,7 @@ def test_binary_trait_power_model(n, p, model, prev, alpha, prop_cases):
         allow_nan=False,
     ),
 )
-@settings(deadline=None, max_examples=20)
+@settings(deadline=None, max_examples=200)
 def test_binary_trait_beta_power_model(n, p, model, prev, alpha, prop_cases, power):
     """Test effect-size estimate for different models and power."""
     obj = GwasBinaryModel()

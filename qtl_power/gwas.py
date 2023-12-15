@@ -22,7 +22,10 @@ class Gwas:
             power (`float`): power for association
 
         """
-        return 1.0 - ncx2.cdf(ncx2.ppf(1.0 - alpha, df, 0), df, ncp)
+        try:
+            return 1.0 - ncx2.cdf(ncx2.ppf(1.0 - alpha, df, 0), df, ncp)
+        except OverflowError:
+            return np.nan
 
 
 class GwasQuant(Gwas):
@@ -63,11 +66,8 @@ class GwasQuant(Gwas):
             ncp (`float`): non-centrality parameter.
 
         """
-        try:
-            ncp = self.ncp_quant(n, p, beta, r2)
-            return self.llr_power(alpha, df=1, ncp=ncp)
-        except OverflowError:
-            return np.nan
+        ncp = self.ncp_quant(n, p, beta, r2)
+        return self.llr_power(alpha, df=1, ncp=ncp)
 
     def quant_trait_beta_power(self, n=100, power=0.90, p=0.1, r2=1.0, alpha=5e-8):
         """Determine the effect-size required to detect an association at this MAF.
