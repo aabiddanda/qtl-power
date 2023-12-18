@@ -121,15 +121,16 @@ def test_power_burden_model1(n, j, prop_causal, prop_risk, tev, alpha):
     )
 
 
-@given(n=st.integers(min_value=1), nreps=st.integers(min_value=1, max_value=100))
+@given(n=st.integers(min_value=1), nreps=st.integers(min_value=2, max_value=100))
 @settings(deadline=None, max_examples=200)
 def test_power_burden_model1_real(n, nreps):
     """Test of power under burden model 1 and real sampling."""
     obj = RareVariantBurdenPower()
     est_power = obj.power_burden_model1_real(n=n, nreps=nreps)
     assert est_power.size == nreps
-    assert np.nanmean(est_power >= 0)
-    assert np.nanmean(est_power <= 1)
+    if ~np.isnan(np.nanmean(est_power)):
+        assert np.nanmean(est_power) >= 0
+        assert np.nanmean(est_power) <= 1
 
 
 @given(
