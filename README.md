@@ -1,3 +1,5 @@
+
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/aabiddanda/qtl-power/HEAD)
 # Power Calculation Routines for GWAS Study Design
 
 This is a library to quickly calculate power curves for the expected detected effect in Genome-Wide Association Studies. 
