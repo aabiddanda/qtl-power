@@ -75,13 +75,13 @@
              
   <section id="testing">
 <h1>Testing<a class="headerlink" href="#testing" title="Link to this heading"></a></h1>
-<p>This python package is supported by substantial unit test coverage. In particular we favor <a class="reference external" href="https://medium.com/criteo-engineering/introduction-to-property-based-testing-f5236229d237">property-based testing</a> using the <a class="reference external" href="https://hypothesis.readthedocs.io/en/latest/index.html">hypothesis</a> package. Property-based testing is mainly used to ensure that across a wide variety of inputs consistent with numerical boundaries for the arguments for a function, that the function arguments are still well supported (e.g. projected power is still within the range of 0.0 - 1.0).</p>
+<p>This python package is supported by substantial unit test coverage. In particular we favor <a class="reference external" href="https://medium.com/criteo-engineering/introduction-to-property-based-testing-f5236229d237">property-based testing</a> using the <a class="reference external" href="https://hypothesis.readthedocs.io/en/latest/index.html">hypothesis</a> package. Property-based testing is mainly used to ensure that across a wide variety of inputs consistent with numerical boundaries for the arguments for a function, that the function arguments are still well supported (e.g. projected power is within the range of 0.0 - 1.0).</p>
 <p>In order to run the unit tests (and ensure changes have not broken previous testing):</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">pytest</span><span class="o">-</span><span class="n">cov</span> <span class="n">pytest</span><span class="o">-</span><span class="n">xdist</span> <span class="n">hypothesis</span>
 <span class="n">pytest</span> <span class="o">-</span><span class="n">n</span> <span class="n">auto</span> <span class="o">--</span><span class="n">cov</span>
 </pre></div>
 </div>
-<p>this will ensure you apply all of the unit tests using multiple available cores on your machine and a coverage report will be generated. Note that if you have setup the conda environment using the <cite>environment.yaml</cite> file you will not have to run the <cite>pip install</cite> commands.</p>
+<p>this will ensure you apply all of the unit tests using multiple available cores on your machine and a coverage report will be generated. Note that if you have setup the conda environment using the <cite>environment.yml</cite> file you will not have to run the <cite>pip install</cite> commands.</p>
 </section>
 
 
