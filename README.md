@@ -1,5 +1,7 @@
 # Power Calculation Routines for GWAS Study Design
 
+This is a library to quickly calculate power curves for the expected detected effect in Genome-Wide Association Studies. 
+
 ## Installation
 
 If you are interested in installing this package for direct use within scripts or notebooks, please run:
