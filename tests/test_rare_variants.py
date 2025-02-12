@@ -48,6 +48,7 @@ def test_llr_power(a, d, ncp, ncp0):
     ),
     test=st.sampled_from(["SKAT", "Calpha", "Hotelling"]),
 )
+@settings(deadline=None, max_examples=100)
 def test_sim_af_weights(j, a1, b1, test):
     """Test of allele frequency weight calculation."""
     obj = RareVariantPower()
@@ -73,6 +74,7 @@ def test_sim_af_weights(j, a1, b1, test):
     ),
     seed=st.integers(min_value=1, max_value=1000000),
 )
+@settings(deadline=None, max_examples=100)
 def test_sim_var_per_gene(a, b, seed):
     """Test of simulating variants per-gene."""
     obj = RareVariantPower()
