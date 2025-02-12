@@ -99,7 +99,30 @@ def test_ncp_burden_test_model1(n, j, jd, jp, tev):
     """Test of non-centrality parameter under a burden model."""
     assume(jd + jp > 0)
     obj = RareVariantBurdenPower()
-    obj.ncp_burden_test_model1(n=n, j=j, jd=jd, jp=jp, tev=tev)
+    ncp = obj.ncp_burden_test_model1(n=n, j=j, jd=jd, jp=jp, tev=tev)
+    assert ncp >= 0
+
+
+@given(
+    n=st.integers(min_value=1),
+    j=st.integers(min_value=100, max_value=100000),
+    jd=st.integers(min_value=0, max_value=50),
+    jp=st.integers(min_value=0, max_value=50),
+    tev=st.floats(
+        min_value=1e-5,
+        max_value=1,
+        exclude_max=True,
+        allow_infinity=False,
+        allow_nan=False,
+    ),
+)
+def test_ncp_burden_test_model2(n, j, jd, jp, tev):
+    """Test of non-centrality parameter under a burden model."""
+    assume(jd + jp > 0)
+    obj = RareVariantBurdenPower()
+    ws, ps = obj.sim_af_weights(j=j)
+    ncp = obj.ncp_burden_test_model2(ws, ps, n=n, jd=jd, tev=tev)
+    assert ncp >= 0
 
 
 @given(
@@ -121,9 +144,40 @@ def test_ncp_burden_test_model1(n, j, jd, jp, tev):
 def test_power_burden_model1(n, j, prop_causal, prop_risk, tev, alpha):
     """Test of power under burden model 1."""
     obj = RareVariantBurdenPower()
-    obj.power_burden_model1(
+    power = obj.power_burden_model1(
         n=n, j=j, prop_causal=prop_causal, prop_risk=prop_risk, tev=tev, alpha=alpha
     )
+    if ~np.isnan(power):
+        assert power >= 0
+        assert power <= 1
+
+
+@given(
+    n=st.integers(min_value=1),
+    j=st.integers(min_value=100, max_value=100000),
+    prop_causal=st.floats(min_value=1e-2, max_value=1.0),
+    prop_risk=st.floats(min_value=0.5, max_value=1.0),
+    tev=st.floats(
+        min_value=1e-5,
+        max_value=1,
+        exclude_max=True,
+        allow_infinity=False,
+        allow_nan=False,
+    ),
+    alpha=st.floats(
+        min_value=1e-32, max_value=0.5, allow_infinity=False, allow_nan=False
+    ),
+)
+def test_power_burden_model2(n, j, prop_causal, prop_risk, tev, alpha):
+    """Test of non-centrality parameter under a burden model S2."""
+    obj = RareVariantBurdenPower()
+    ws, ps = obj.sim_af_weights(j=j)
+    power = obj.power_burden_model2(
+        ws, ps, n=n, prop_causal=prop_causal, prop_risk=prop_risk, tev=tev, alpha=alpha
+    )
+    if ~np.isnan(power):
+        assert power >= 0
+        assert power <= 1
 
 
 @given(n=st.integers(min_value=1), nreps=st.integers(min_value=2, max_value=100))

@@ -134,11 +134,12 @@ class RareVariantBurdenPower(RareVariantPower):
     def ncp_burden_test_model2(self, ws, ps, n=100, jd=10, tev=0.1):
         """Approximation of the non-centrality parameter under model S2 from Derkach et al.
 
-        The key assumption in this case is that there is independence between an alleles effect-size and its MAF.
+        The key assumption in this case is that there is independence between alleles effect-size and its MAF.
 
         Args:
+            ws (`np.array`): numpy array of variant weights
+            ps (`np.array`): numpy array of variant frequencies
             n (`int`): total sample size.
-            j (`int`): total number of variants in the gene.
             jd (`int`): number of disease variants in the gene.
             jp (`int`): number of protective variants in the gene.
             tev (`float`): proportion of variance explained by gene.
@@ -212,6 +213,30 @@ class RareVariantBurdenPower(RareVariantPower):
         jd = j_causal * prop_risk
         jp = j_causal * (1 - prop_risk)
         ncp = self.ncp_burden_test_model1(n=n, j=j, jd=jd, jp=jp, tev=tev)
+        return self.llr_power(alpha=alpha, ncp=ncp)
+
+    def power_burden_model2(
+        self, ws, ps, n=100, j=30, prop_causal=0.80, prop_risk=0.1, tev=0.1, alpha=1e-6
+    ):
+        """Estimate the power under a burden model 1 from PAGEANT.
+
+        Args:
+            n (`int`): total sample size.
+            j (`int`): total number of variants in the gene.
+            prop_causal (`float`): proportion of causal variants.
+            prop_risk (`float`): number of protective variants.
+            tev (`float`): proportion of variance explained by gene.
+            alpha (`float`): p-value threshold for power.
+
+        Returns:
+           power (`float`): power for detection under the burden model.
+
+        """
+        assert (prop_causal > 0.0) & (prop_causal <= 1.0)
+        assert (prop_risk > 0.0) & (prop_risk <= 1.0)
+        j_causal = j * prop_causal
+        jd = j_causal * prop_risk
+        ncp = self.ncp_burden_test_model2(ws, ps, n=n, jd=jd, tev=tev)
         return self.llr_power(alpha=alpha, ncp=ncp)
 
     def tev_power_burden_model1(

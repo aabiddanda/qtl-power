@@ -1,3 +1,3 @@
 """Initialization of qtl-power module."""
 
-__version__ = "0.0.1c"
+__version__ = "0.5.0a"
