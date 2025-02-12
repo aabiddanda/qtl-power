@@ -111,7 +111,7 @@ class RareVariantBurdenPower(RareVariantPower):
     def ncp_burden_test_model1(self, n=100, j=30, jd=10, jp=0, tev=0.1):
         """Approximation of the non-centrality parameter under model S1 from Derkach et al.
 
-        The key assumption in this case is that there is independence between an alleles effect-size and its MAF.
+        The key assumption in this case is that there is independence between an alleles effect-size and EV.
 
         Args:
             n (`int`): total sample size.
@@ -130,6 +130,64 @@ class RareVariantBurdenPower(RareVariantPower):
         assert (tev > 0) & (tev <= 1.0)
         ncp = n * ((jd - jp) ** 2) * tev / (j * (jd + jp))
         return ncp
+
+    def ncp_burden_test_model2(self, ws, ps, n=100, jd=10, tev=0.1):
+        """Approximation of the non-centrality parameter under model S2 from Derkach et al.
+
+        The key assumption in this case is that there is independence between an alleles effect-size and its MAF.
+
+        Args:
+            n (`int`): total sample size.
+            j (`int`): total number of variants in the gene.
+            jd (`int`): number of disease variants in the gene.
+            jp (`int`): number of protective variants in the gene.
+            tev (`float`): proportion of variance explained by gene.
+
+        Returns:
+           ncp (`float`): non-centrality parameter.
+
+        """
+        assert n > 0
+        assert ws.ndim == 1
+        assert (ps.ndim == ws.ndim) and (ps.size == ws.size)
+        assert (tev > 0) & (tev <= 1.0)
+        assert np.all(ps < 1.0) and np.all(ps > 0.0)
+        assert np.all(ws > 0)
+        assert jd <= ws.size
+        j = ws.size
+        jp = j - jd
+        c = np.sum((ws**2) * (ps**2) * (1.0 - ps))
+        ncp = n * ((jd - jp) ** 2) * c * tev
+        ncp /= j * np.sum(ps * c)
+        return ncp
+
+    def ncp_burden_test_model3(self, ws, ps, n=100, jd=10, tev=0.1, eta=0.1):
+        """Approximation of the non-centrality parameter under model S3 from Derkach et al.
+
+        The key assumption in this case is that alleles effect-size is strongly coupled to its MAF.
+
+        Args:
+            n (`int`): total sample size.
+            j (`int`): total number of variants in the gene.
+            jd (`int`): number of disease variants in the gene.
+            jp (`int`): number of protective variants in the gene.
+            tev (`float`): proportion of variance explained by gene.
+
+        Returns:
+           ncp (`float`): non-centrality parameter.
+
+        """
+        assert n > 0
+        assert ws.ndim == 1
+        assert (ps.ndim == ws.ndim) and (ps.size == ws.size)
+        assert (tev > 0) & (tev <= 1.0)
+        assert np.all(ps < 1.0) and np.all(ps > 0.0)
+        assert np.all(ws > 0)
+        assert jd <= ws.size
+        c = np.sum((ws**2) * (ps**2) * (1.0 - ps))  # noqa
+        raise NotImplementedError(
+            "Model S3 for sum-based tests is not currently available!"
+        )
 
     def power_burden_model1(
         self, n=100, j=30, prop_causal=0.80, prop_risk=0.1, tev=0.1, alpha=1e-6

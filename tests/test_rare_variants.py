@@ -3,8 +3,11 @@ import numpy as np
 from hypothesis import assume, given, settings
 from hypothesis import strategies as st
 
-from qtl_power.rare_variants import (RareVariantBurdenPower, RareVariantPower,
-                                     RareVariantVCPower)
+from qtl_power.rare_variants import (
+    RareVariantBurdenPower,
+    RareVariantPower,
+    RareVariantVCPower,
+)
 
 
 @given(
