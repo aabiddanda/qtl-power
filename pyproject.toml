@@ -33,3 +33,7 @@ namespaces = false
 
 [tool.setuptools.dynamic.version]
 attr = "qtl_power.__version__"
+
+[project.urls]
+Homepage = "https://github.com/aabiddanda/qtl-power"
+Issues = "https://github.com/aabiddanda/qtl-power/issues"

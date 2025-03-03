@@ -9,17 +9,12 @@ This is a library to quickly calculate power curves for the expected detected ef
 If you are interested in installing this package for direct use within scripts or notebooks, please run:
 
 ```
-git clone https://gitlab.com/data-analysis5/qtl-power.git
-cd qtl-power
-pip install .
+pip install qtl-power
 ```
-
-to install directly from source.
 
 ## Interactive Exploration via Notebooks
 
 If you are primarily interested in a more interactive experience, you can immediately use several of our pre-built notebooks via the [`mybinder`](https://mybinder.org/v2/gl/data-analysis5%2Fqtl-power/default?labpath=notebooks%2F) link above. This will allow you to use the library to generate commonly used plots for comparing power for genetic association based on mutliple input parameters.
-
 
 ## Documentation
 
