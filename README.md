@@ -1,5 +1,5 @@
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/aabiddanda/qtl-power/HEAD) ![Read the Docs](https://img.shields.io/readthedocs/qtl-power)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/aabiddanda/qtl-power/HEAD) [![Read the Docs](https://img.shields.io/readthedocs/qtl-power)](https://aabiddanda.github.io/qtl-power/)
 
 # Power Calculation Routines for GWAS Study Design
 
