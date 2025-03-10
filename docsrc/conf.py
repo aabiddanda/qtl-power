@@ -11,9 +11,9 @@ sys.path.insert(0, os.path.abspath("../qtl_power/"))
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "qtl-power"
-copyright = "2022, Arjun Biddanda"
+copyright = "2025, Arjun Biddanda"
 author = "Arjun Biddanda"
-release = "0.0.1a"
+release = "0.5.0b"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -41,5 +41,3 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 html_theme = "sphinx_rtd_theme"
 html_static_path = ["source/_static"]
-# html_logo = "images/54gene_logo.png"
-# html_css_files = ["custom.css"]
