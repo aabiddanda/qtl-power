@@ -9,3 +9,4 @@ qtl_power.egg-info/
 docsrc/_build/
 docsrc/stubs/
 dist/*
+CLAUDE.md

@@ -400,6 +400,72 @@ class GwasBinomialTrait(Gwas):
         """
         return p0 + 2.0 * af * beta
 
+    @staticmethod
+    def beta_to_sd_units(beta, mu, n_mean):
+        """Convert raw probability beta to phenotypic-SD units (comparable to quantitative GWAS).
+
+        The per-individual rate Y_i/n_i has variance mu*(1-mu)/n_mean, so:
+            beta_sd = beta / sqrt(mu*(1-mu) / n_mean)
+
+        This is exact under the identity-link model and shows that deeper
+        sequencing (larger n_mean) makes the same raw beta appear larger in SD units.
+
+        Args:
+            beta (`float`): per-allele change in success probability (raw units).
+            mu (`float`): population mean success probability.
+            n_mean (`float`): mean number of trials per individual.
+        Returns:
+            beta_sd (`float`): effect size in units of phenotypic SD.
+        """
+        return beta * np.sqrt(n_mean / (mu * (1.0 - mu)))
+
+    @staticmethod
+    def sd_units_to_beta(beta_sd, mu, n_mean):
+        """Convert SD-unit effect size back to raw probability units.
+
+        Inverse of beta_to_sd_units.
+
+        Args:
+            beta_sd (`float`): effect size in units of phenotypic SD.
+            mu (`float`): population mean success probability.
+            n_mean (`float`): mean number of trials per individual.
+        Returns:
+            beta (`float`): per-allele change in success probability.
+        """
+        return beta_sd / np.sqrt(n_mean / (mu * (1.0 - mu)))
+
+    @staticmethod
+    def beta_to_log_or(beta, mu):
+        """Convert raw probability beta to an approximate log-odds ratio.
+
+        First-order delta method on the logit transformation:
+            log(OR) ≈ beta / (mu*(1-mu))
+
+        Valid when beta is small relative to mu*(1-mu). Accuracy degrades when
+        mu is near 0 or 1, or when the raw beta is large.
+
+        Args:
+            beta (`float`): per-allele change in success probability (raw units).
+            mu (`float`): population mean success probability.
+        Returns:
+            log_or (`float`): approximate log-odds ratio per allele.
+        """
+        return beta / (mu * (1.0 - mu))
+
+    @staticmethod
+    def log_or_to_beta(log_or, mu):
+        """Convert a log-odds ratio to an approximate raw probability beta.
+
+        Inverse of beta_to_log_or (same small-effect approximation applies).
+
+        Args:
+            log_or (`float`): log-odds ratio per allele.
+            mu (`float`): population mean success probability.
+        Returns:
+            beta (`float`): approximate per-allele change in success probability.
+        """
+        return log_or * mu * (1.0 - mu)
+
     def ncp_binomial(self, n=100, af=0.2, beta=0.05, n_mean=10.0, r2=1.0):
         """Non-centrality parameter for the binomial-trait score test.
 
@@ -525,7 +591,11 @@ class GwasBinomialTrait(Gwas):
             opt_beta (`float`): minimum detectable beta.
         """
         assert (0.0 < power < 1.0)
-        beta_max = (1.0 - self.mu) / 2.0 * 0.9999
+        # Tightest constraint keeping p_i in (0,1) for all genotypes:
+        #   g=2 carrier: mu + 2*(1-af)*beta < 1  =>  beta < (1-mu) / (2*(1-af))
+        #   g=0 carrier: mu - 2*af*beta     > 0  =>  beta < mu     / (2*af)
+        beta_max = min((1.0 - self.mu) / (2.0 * (1.0 - af)),
+                       self.mu / (2.0 * af)) * 0.9999
         f = lambda b: self.binomial_trait_power(n, af, b, n_mean, r2) - power
         try:
             opt_beta = root_scalar(f, bracket=(1e-9, beta_max)).root
@@ -536,6 +606,9 @@ class GwasBinomialTrait(Gwas):
     def power_curve(self, sample_sizes, af=0.2, beta=0.05, n_mean=10.0, r2=1.0):
         """Power as a function of sample size.
 
+        Vectorised: all NCPs are computed in one pass, then a single ncx2.cdf
+        call is made — no Python loop over sample sizes.
+
         Args:
             sample_sizes (`array-like`): array of N values.
             af (`float`): allele frequency.
@@ -545,4 +618,8 @@ class GwasBinomialTrait(Gwas):
         Returns:
             powers (`np.ndarray`): power at each sample size.
         """
-        return np.array([self.binomial_trait_power(n, af, beta, n_mean, r2) for n in sample_sizes])
+        ns = np.asarray(sample_sizes, dtype=float)
+        var_g = 2.0 * af * (1.0 - af)
+        ncps = r2 * ns * beta**2 * var_g * n_mean / (self.mu * (1.0 - self.mu))
+        chi2_crit = ncx2.ppf(1.0 - self.alpha, df=1, nc=0)
+        return 1.0 - ncx2.cdf(chi2_crit, df=1, nc=ncps)

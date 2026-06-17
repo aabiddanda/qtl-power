@@ -379,12 +379,74 @@ def test_binomial_trait_power_with_nvar_ordering():
     assert lo <= mid <= hi
 
 
+def test_beta_sd_units_round_trip():
+    """beta -> SD units -> beta round-trips exactly."""
+    for mu in [0.2, 0.5, 0.8]:
+        for n_mean in [1.0, 10.0, 50.0]:
+            beta = 0.03
+            beta_sd = GwasBinomialTrait.beta_to_sd_units(beta, mu, n_mean)
+            assert abs(GwasBinomialTrait.sd_units_to_beta(beta_sd, mu, n_mean) - beta) < 1e-12
+
+
+def test_beta_log_or_round_trip():
+    """beta -> log-OR -> beta round-trips exactly (approximation is self-consistent)."""
+    for mu in [0.2, 0.5, 0.8]:
+        beta = 0.01
+        log_or = GwasBinomialTrait.beta_to_log_or(beta, mu)
+        assert abs(GwasBinomialTrait.log_or_to_beta(log_or, mu) - beta) < 1e-12
+
+
+def test_beta_to_sd_units_increases_with_n_mean():
+    """Deeper sequencing makes the same raw beta larger in SD units."""
+    mu = 0.4
+    beta = 0.05
+    sd_low = GwasBinomialTrait.beta_to_sd_units(beta, mu, n_mean=5.0)
+    sd_high = GwasBinomialTrait.beta_to_sd_units(beta, mu, n_mean=20.0)
+    assert sd_high > sd_low
+
+
 def test_gwas_binomial_invalid_mu():
     """Constructor raises ValueError for mu outside (0, 1)."""
     with pytest.raises(ValueError):
         GwasBinomialTrait(mu=0.0)
     with pytest.raises(ValueError):
         GwasBinomialTrait(mu=1.5)
+
+
+def test_binomial_trait_beta_power_self_consistent():
+    """power(opt_beta) should recover the target power (solver round-trip)."""
+    obj = GwasBinomialTrait(mu=0.3, alpha=0.05)
+    for af in [0.1, 0.3, 0.5]:
+        opt_beta = obj.binomial_trait_beta_power(n=5000, af=af, n_mean=10, power=0.8)
+        if not np.isnan(opt_beta):
+            recovered = obj.binomial_trait_power(n=5000, af=af, beta=opt_beta, n_mean=10)
+            assert abs(recovered - 0.8) < 1e-4, f"af={af}: power={recovered:.4f}"
+
+
+def test_binomial_trait_beta_power_mid_af():
+    """beta_max bug: at af=0.5, mu=0.3 the old cap (0.35) exceeded the valid range (0.3).
+    The solver must return a finite, valid beta."""
+    obj = GwasBinomialTrait(mu=0.3, alpha=0.05)
+    opt_beta = obj.binomial_trait_beta_power(n=50000, af=0.5, n_mean=10, power=0.8)
+    assert not np.isnan(opt_beta)
+    assert opt_beta < 0.3  # strict validity bound at af=0.5, mu=0.3
+
+
+def test_power_curve_matches_scalar():
+    """Vectorised power_curve must match per-point binomial_trait_power calls."""
+    obj = GwasBinomialTrait(mu=0.3, alpha=0.05)
+    ns = np.array([500, 1000, 2000, 5000, 10000])
+    curve = obj.power_curve(ns, af=0.2, beta=0.05, n_mean=10)
+    scalar = np.array([obj.binomial_trait_power(n, af=0.2, beta=0.05, n_mean=10) for n in ns])
+    np.testing.assert_allclose(curve, scalar, rtol=1e-10)
+
+
+def test_power_curve_monotone():
+    """Power must be non-decreasing in sample size."""
+    obj = GwasBinomialTrait(mu=0.3, alpha=0.05)
+    ns = np.linspace(100, 20000, 50)
+    curve = obj.power_curve(ns, af=0.2, beta=0.05, n_mean=10)
+    assert np.all(np.diff(curve) >= 0)
 
 
 def test_ncp_binomial_r2_scales_ncp():
