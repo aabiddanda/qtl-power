@@ -4,7 +4,7 @@ import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
-from qtl_power.gwas import Gwas, GwasBinary, GwasBinaryModel, GwasQuant
+from qtl_power.gwas import Gwas, GwasBinary, GwasBinaryModel, GwasQuant, GwasBinomialTrait
 
 
 @given(
@@ -270,3 +270,152 @@ def test_binary_trait_beta_power_model(n, p, model, prev, alpha, prop_cases, pow
     )
     if ~np.isnan(opt_beta):
         assert opt_beta >= 0
+
+
+# ---------------------------------------------------------------------------
+# GwasBinomialTrait
+# ---------------------------------------------------------------------------
+
+@given(
+    n=st.integers(min_value=1, max_value=10_000_000),
+    af=st.floats(min_value=1e-4, max_value=1 - 1e-4),
+    beta=st.floats(min_value=-1e3, max_value=1e3, allow_nan=False, allow_infinity=False),
+    n_mean=st.floats(min_value=1e-3, max_value=1e4, allow_nan=False, allow_infinity=False),
+    mu=st.floats(min_value=1e-4, max_value=1 - 1e-4),
+)
+@settings(deadline=None, max_examples=50)
+def test_ncp_binomial(n, af, beta, n_mean, mu):
+    """NCP is non-negative for any valid inputs."""
+    obj = GwasBinomialTrait(mu=mu)
+    ncp = obj.ncp_binomial(n=n, af=af, beta=beta, n_mean=n_mean)
+    assert ncp >= 0
+
+
+@given(
+    n=st.integers(min_value=1, max_value=10_000_000),
+    af=st.floats(min_value=1e-4, max_value=1 - 1e-4),
+    beta=st.floats(min_value=1e-6, max_value=0.1, allow_nan=False),
+    n_mean=st.floats(min_value=1.0, max_value=100.0, allow_nan=False),
+    mu=st.floats(min_value=0.1, max_value=0.9),
+    alpha=st.floats(min_value=1e-32, max_value=0.5, exclude_min=True, exclude_max=True),
+)
+@settings(deadline=None, max_examples=50)
+def test_binomial_trait_power(n, af, beta, n_mean, mu, alpha):
+    """Power is in [0, 1]."""
+    obj = GwasBinomialTrait(mu=mu, alpha=alpha)
+    power = obj.binomial_trait_power(n=n, af=af, beta=beta, n_mean=n_mean)
+    assert np.isnan(power) or (0.0 <= power <= 1.0)
+
+
+@given(
+    af=st.floats(min_value=0.05, max_value=0.45),
+    beta=st.floats(min_value=1e-4, max_value=0.05),
+    n_mean=st.floats(min_value=1.0, max_value=50.0),
+    mu=st.floats(min_value=0.1, max_value=0.9),
+    power=st.floats(min_value=0.5, max_value=0.95),
+)
+@settings(deadline=None, max_examples=50)
+def test_binomial_trait_opt_n(af, beta, n_mean, mu, power):
+    """Optimal N is positive when finite."""
+    obj = GwasBinomialTrait(mu=mu, alpha=0.05)
+    opt_n = obj.binomial_trait_opt_n(af=af, beta=beta, n_mean=n_mean, power=power)
+    if ~np.isnan(opt_n):
+        assert opt_n > 0
+
+
+@given(
+    n=st.integers(min_value=1000, max_value=1_000_000),
+    af=st.floats(min_value=0.05, max_value=0.45),
+    n_mean=st.floats(min_value=1.0, max_value=50.0),
+    mu=st.floats(min_value=0.1, max_value=0.8),
+    power=st.floats(min_value=0.5, max_value=0.95),
+)
+@settings(deadline=None, max_examples=50)
+def test_binomial_trait_beta_power(n, af, n_mean, mu, power):
+    """Min detectable beta is non-negative when finite."""
+    obj = GwasBinomialTrait(mu=mu, alpha=0.05)
+    opt_beta = obj.binomial_trait_beta_power(n=n, af=af, n_mean=n_mean, power=power)
+    if ~np.isnan(opt_beta):
+        assert opt_beta >= 0
+
+
+def test_ncp_binomial_af_symmetry():
+    """NCP must be identical at af and 1-af (mean-centred genotype)."""
+    obj = GwasBinomialTrait(mu=0.3)
+    for af in [0.1, 0.2, 0.3, 0.4]:
+        ncp_af = obj.ncp_binomial(n=5000, af=af, beta=0.05, n_mean=10)
+        ncp_comp = obj.ncp_binomial(n=5000, af=1.0 - af, beta=0.05, n_mean=10)
+        assert abs(ncp_af - ncp_comp) < 1e-10
+
+
+def test_binomial_trait_power_known_values():
+    """Analytic power matches validation table from the derivation notes (tol 2%)."""
+    obj = GwasBinomialTrait(mu=0.3, alpha=0.05)
+    expected = {0.1: 0.1004, 0.2: 0.1408, 0.3: 0.1701, 0.5: 0.1936}
+    for af, exp_pwr in expected.items():
+        pwr = obj.binomial_trait_power(n=2000, af=af, beta=0.005, n_mean=10)
+        assert abs(pwr - exp_pwr) < 0.02, f"af={af}: got {pwr:.4f}, expected {exp_pwr:.4f}"
+
+
+def test_mu_from_p0():
+    """mu_from_p0 recovers the correct population mean."""
+    p0, af, beta = 0.2, 0.3, 0.05
+    mu = GwasBinomialTrait.mu_from_p0(p0, af, beta)
+    assert abs(mu - (p0 + 2 * af * beta)) < 1e-12
+
+
+def test_ncp_binomial_sd_zero_for_fixed_n():
+    """SD of NCP is zero for a fixed-n design."""
+    obj = GwasBinomialTrait(mu=0.3)
+    assert obj.ncp_binomial_sd(n=1000, af=0.2, beta=0.05, n_mean=10, n_var=0.0) == 0.0
+
+
+def test_binomial_trait_power_with_nvar_ordering():
+    """Uncertainty bands are ordered: power_low <= power_mid <= power_high."""
+    obj = GwasBinomialTrait(mu=0.3, alpha=0.05)
+    lo, mid, hi = obj.binomial_trait_power_with_nvar(
+        n=2000, af=0.2, beta=0.05, n_mean=10, n_var=10, n_sigma=1.0
+    )
+    assert lo <= mid <= hi
+
+
+def test_gwas_binomial_invalid_mu():
+    """Constructor raises ValueError for mu outside (0, 1)."""
+    with pytest.raises(ValueError):
+        GwasBinomialTrait(mu=0.0)
+    with pytest.raises(ValueError):
+        GwasBinomialTrait(mu=1.5)
+
+
+def test_ncp_binomial_r2_scales_ncp():
+    """NCP scales linearly with r2, matching the GwasQuant convention."""
+    obj = GwasBinomialTrait(mu=0.3)
+    ncp_full = obj.ncp_binomial(n=5000, af=0.2, beta=0.05, n_mean=10, r2=1.0)
+    for r2 in [0.25, 0.5, 0.8]:
+        assert abs(obj.ncp_binomial(n=5000, af=0.2, beta=0.05, n_mean=10, r2=r2) - r2 * ncp_full) < 1e-10
+
+
+def test_binomial_trait_power_r2_reduces_power():
+    """Imperfect imputation (r2 < 1) strictly reduces power."""
+    obj = GwasBinomialTrait(mu=0.3, alpha=0.05)
+    pwr_full = obj.binomial_trait_power(n=2000, af=0.2, beta=0.05, n_mean=10, r2=1.0)
+    pwr_partial = obj.binomial_trait_power(n=2000, af=0.2, beta=0.05, n_mean=10, r2=0.7)
+    assert pwr_partial < pwr_full
+
+
+@given(
+    n=st.integers(min_value=100, max_value=1_000_000),
+    af=st.floats(min_value=1e-4, max_value=1 - 1e-4),
+    beta=st.floats(min_value=1e-6, max_value=0.1, allow_nan=False),
+    n_mean=st.floats(min_value=1.0, max_value=100.0, allow_nan=False),
+    mu=st.floats(min_value=0.1, max_value=0.9),
+    r2=st.floats(min_value=1e-4, max_value=1.0),
+)
+@settings(deadline=None, max_examples=50)
+def test_ncp_binomial_with_r2(n, af, beta, n_mean, mu, r2):
+    """NCP with r2 is non-negative and no greater than the r2=1 NCP."""
+    obj = GwasBinomialTrait(mu=mu)
+    ncp = obj.ncp_binomial(n=n, af=af, beta=beta, n_mean=n_mean, r2=r2)
+    ncp_full = obj.ncp_binomial(n=n, af=af, beta=beta, n_mean=n_mean, r2=1.0)
+    assert ncp >= 0
+    assert ncp <= ncp_full + 1e-10

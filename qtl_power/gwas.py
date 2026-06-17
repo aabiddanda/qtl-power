@@ -357,3 +357,192 @@ class GwasBinaryModel(Gwas):
         except (OverflowError, ValueError):
             opt_beta = np.nan
         return opt_beta
+
+
+class GwasBinomialTrait(Gwas):
+    """GWAS power calculator for a binomial count trait.
+
+    Model: Y_i ~ Binomial(n_i, p_i),  p_i = mu + beta*(g_i - 2*af)
+
+    g_i in {0,1,2} is the additive genotype under HWE.  The genotype is
+    mean-centred so the NCP is symmetric in af.  mu is the *population mean*
+    success probability E[p_i], which is invariant when sweeping af.
+
+    NCP: lambda = r2 * N * beta^2 * 2*af*(1-af) * n_mean / (mu*(1-mu))
+
+    r2 is the LD / imputation-accuracy correlation between the causal variant
+    and the typed/imputed tag; r2=1 recovers the perfectly-typed case.
+    """
+
+    def __init__(self, mu=0.5, alpha=5e-8):
+        """Initialize a binomial GWAS power calculator.
+
+        Args:
+            mu (`float`): population mean success probability (0 < mu < 1).
+            alpha (`float`): significance threshold (default 5e-8).
+        """
+        super().__init__()
+        if not (0.0 < mu < 1.0):
+            raise ValueError("mu must be strictly between 0 and 1.")
+        self.mu = mu
+        self.alpha = alpha
+
+    @staticmethod
+    def mu_from_p0(p0, af, beta):
+        """Convert baseline probability p0 = Pr(success | g=0) to population mean mu.
+
+        Args:
+            p0 (`float`): success probability for the aa genotype.
+            af (`float`): allele frequency.
+            beta (`float`): per-allele change in success probability.
+        Returns:
+            mu (`float`): population mean success probability.
+        """
+        return p0 + 2.0 * af * beta
+
+    def ncp_binomial(self, n=100, af=0.2, beta=0.05, n_mean=10.0, r2=1.0):
+        """Non-centrality parameter for the binomial-trait score test.
+
+        Args:
+            n (`int`): number of individuals.
+            af (`float`): allele frequency (0 < af < 1).
+            beta (`float`): per-allele change in success probability.
+            n_mean (`float`): mean number of Binomial trials per individual.
+            r2 (`float`): LD / imputation-accuracy r² between causal and typed variant (0 < r2 <= 1).
+        Returns:
+            ncp (`float`): non-centrality parameter.
+        """
+        assert n > 0
+        assert (0.0 < af < 1.0)
+        assert n_mean > 0
+        assert (0.0 < r2 <= 1.0)
+        var_g = 2.0 * af * (1.0 - af)
+        return r2 * n * beta**2 * var_g * n_mean / (self.mu * (1.0 - self.mu))
+
+    def ncp_binomial_sd(self, n=100, af=0.2, beta=0.05, n_mean=10.0, n_var=0.0, r2=1.0):
+        """Standard deviation of the realised NCP due to variable trial counts.
+
+        By the delta method the variance of the realised NCP is:
+            Var(lambda) = lambda^2 * Var(tg^2 * n) / (E[tg^2 * n])^2 / N
+
+        Returns 0.0 when n_var == 0 (fixed-n design).
+
+        Args:
+            n (`int`): number of individuals.
+            af (`float`): allele frequency.
+            beta (`float`): per-allele change in success probability.
+            n_mean (`float`): mean trials per individual.
+            n_var (`float`): variance of trials per individual (>= 0).
+            r2 (`float`): LD / imputation-accuracy r² (0 < r2 <= 1).
+        Returns:
+            sd (`float`): standard deviation of the realised NCP.
+        """
+        assert n_var >= 0.0
+        if n_var == 0.0:
+            return 0.0
+        lam = self.ncp_binomial(n, af, beta, n_mean, r2)
+        p, q = af, 1.0 - af
+        var_g = 2.0 * p * q
+        # E[(g - 2p)^4] under HWE
+        etg4 = (-2*p)**4 * q**2 + (1 - 2*p)**4 * 2*p*q + (2*q)**4 * p**2
+        en2 = n_var + n_mean**2
+        var_tg2n = etg4 * en2 - (var_g * n_mean)**2
+        cv2_denom = var_tg2n / ((var_g * n_mean)**2 * n)
+        return np.sqrt(lam**2 * cv2_denom)
+
+    def binomial_trait_power(self, n=100, af=0.2, beta=0.05, n_mean=10.0, r2=1.0):
+        """Power to detect the association under the binomial trait model.
+
+        Args:
+            n (`int`): number of individuals.
+            af (`float`): allele frequency.
+            beta (`float`): per-allele change in success probability.
+            n_mean (`float`): mean trials per individual.
+            r2 (`float`): LD / imputation-accuracy r² (0 < r2 <= 1).
+        Returns:
+            power (`float`): power in [0, 1].
+        """
+        ncp = self.ncp_binomial(n, af, beta, n_mean, r2)
+        return self.llr_power(alpha=self.alpha, df=1, ncp=ncp)
+
+    def binomial_trait_power_with_nvar(
+        self, n=100, af=0.2, beta=0.05, n_mean=10.0, n_var=0.0, n_sigma=1.0, r2=1.0
+    ):
+        """Power with ± n_sigma uncertainty bands from variable trial counts.
+
+        Args:
+            n (`int`): number of individuals.
+            af (`float`): allele frequency.
+            beta (`float`): per-allele change in success probability.
+            n_mean (`float`): mean trials per individual.
+            n_var (`float`): variance of trials per individual.
+            n_sigma (`float`): number of NCP standard deviations for bands.
+            r2 (`float`): LD / imputation-accuracy r² (0 < r2 <= 1).
+        Returns:
+            (power_low, power_mid, power_high) (`tuple[float, float, float]`).
+        """
+        lam = self.ncp_binomial(n, af, beta, n_mean, r2)
+        sd = self.ncp_binomial_sd(n, af, beta, n_mean, n_var, r2)
+        return (
+            self.llr_power(alpha=self.alpha, df=1, ncp=max(0.0, lam - n_sigma * sd)),
+            self.llr_power(alpha=self.alpha, df=1, ncp=lam),
+            self.llr_power(alpha=self.alpha, df=1, ncp=lam + n_sigma * sd),
+        )
+
+    def binomial_trait_opt_n(self, af=0.2, beta=0.05, n_mean=10.0, power=0.8, r2=1.0):
+        """Minimum sample size to achieve target power.
+
+        Args:
+            af (`float`): allele frequency.
+            beta (`float`): per-allele change in success probability.
+            n_mean (`float`): mean trials per individual.
+            power (`float`): target power level.
+            r2 (`float`): LD / imputation-accuracy r² (0 < r2 <= 1).
+        Returns:
+            opt_n (`float`): required N (fractional; take ceil in practice).
+        """
+        assert (0.0 < power < 1.0)
+        f = lambda n: self.binomial_trait_power(n, af, beta, n_mean, r2) - power
+        try:
+            opt_n = root_scalar(f, bracket=(1.0, 1e10)).root
+        except (OverflowError, ValueError):
+            opt_n = np.nan
+        return opt_n
+
+    def binomial_trait_beta_power(self, n=100, af=0.2, n_mean=10.0, power=0.8, r2=1.0):
+        """Minimum detectable |beta| at the target power level.
+
+        beta is bounded above so that p_i = mu + beta*(g-2*af) stays in (0,1).
+        The hard cap is beta_max = (1 - mu) / 2, applied with a small margin.
+
+        Args:
+            n (`int`): number of individuals.
+            af (`float`): allele frequency.
+            n_mean (`float`): mean trials per individual.
+            power (`float`): target power level.
+            r2 (`float`): LD / imputation-accuracy r² (0 < r2 <= 1).
+        Returns:
+            opt_beta (`float`): minimum detectable beta.
+        """
+        assert (0.0 < power < 1.0)
+        beta_max = (1.0 - self.mu) / 2.0 * 0.9999
+        f = lambda b: self.binomial_trait_power(n, af, b, n_mean, r2) - power
+        try:
+            opt_beta = root_scalar(f, bracket=(1e-9, beta_max)).root
+        except (OverflowError, ValueError):
+            opt_beta = np.nan
+        return opt_beta
+
+    def power_curve(self, sample_sizes, af=0.2, beta=0.05, n_mean=10.0, r2=1.0):
+        """Power as a function of sample size.
+
+        Args:
+            sample_sizes (`array-like`): array of N values.
+            af (`float`): allele frequency.
+            beta (`float`): per-allele change in success probability.
+            n_mean (`float`): mean trials per individual.
+            r2 (`float`): LD / imputation-accuracy r² (0 < r2 <= 1).
+        Returns:
+            powers (`np.ndarray`): power at each sample size.
+        """
+        return np.array([self.binomial_trait_power(n, af, beta, n_mean, r2) for n in sample_sizes])
