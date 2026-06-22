@@ -302,8 +302,8 @@ def test_ncp_binomial(n, af, beta, n_mean, mu):
 @settings(deadline=None, max_examples=50)
 def test_binomial_trait_power(n, af, beta, n_mean, mu, alpha):
     """Power is in [0, 1]."""
-    obj = GwasBinomialTrait(mu=mu, alpha=alpha)
-    power = obj.binomial_trait_power(n=n, af=af, beta=beta, n_mean=n_mean)
+    obj = GwasBinomialTrait(mu=mu)
+    power = obj.binomial_trait_power(n=n, af=af, beta=beta, n_mean=n_mean, alpha=alpha)
     assert np.isnan(power) or (0.0 <= power <= 1.0)
 
 
@@ -317,8 +317,8 @@ def test_binomial_trait_power(n, af, beta, n_mean, mu, alpha):
 @settings(deadline=None, max_examples=50)
 def test_binomial_trait_opt_n(af, beta, n_mean, mu, power):
     """Optimal N is positive when finite."""
-    obj = GwasBinomialTrait(mu=mu, alpha=0.05)
-    opt_n = obj.binomial_trait_opt_n(af=af, beta=beta, n_mean=n_mean, power=power)
+    obj = GwasBinomialTrait(mu=mu)
+    opt_n = obj.binomial_trait_opt_n(af=af, beta=beta, n_mean=n_mean, power=power, alpha=0.05)
     if ~np.isnan(opt_n):
         assert opt_n > 0
 
@@ -333,8 +333,8 @@ def test_binomial_trait_opt_n(af, beta, n_mean, mu, power):
 @settings(deadline=None, max_examples=50)
 def test_binomial_trait_beta_power(n, af, n_mean, mu, power):
     """Min detectable beta is non-negative when finite."""
-    obj = GwasBinomialTrait(mu=mu, alpha=0.05)
-    opt_beta = obj.binomial_trait_beta_power(n=n, af=af, n_mean=n_mean, power=power)
+    obj = GwasBinomialTrait(mu=mu)
+    opt_beta = obj.binomial_trait_beta_power(n=n, af=af, n_mean=n_mean, power=power, alpha=0.05)
     if ~np.isnan(opt_beta):
         assert opt_beta >= 0
 
@@ -350,10 +350,10 @@ def test_ncp_binomial_af_symmetry():
 
 def test_binomial_trait_power_known_values():
     """Analytic power matches validation table from the derivation notes (tol 2%)."""
-    obj = GwasBinomialTrait(mu=0.3, alpha=0.05)
+    obj = GwasBinomialTrait(mu=0.3)
     expected = {0.1: 0.1004, 0.2: 0.1408, 0.3: 0.1701, 0.5: 0.1936}
     for af, exp_pwr in expected.items():
-        pwr = obj.binomial_trait_power(n=2000, af=af, beta=0.005, n_mean=10)
+        pwr = obj.binomial_trait_power(n=2000, af=af, beta=0.005, n_mean=10, alpha=0.05)
         assert abs(pwr - exp_pwr) < 0.02, f"af={af}: got {pwr:.4f}, expected {exp_pwr:.4f}"
 
 
@@ -372,9 +372,9 @@ def test_ncp_binomial_sd_zero_for_fixed_n():
 
 def test_binomial_trait_power_with_nvar_ordering():
     """Uncertainty bands are ordered: power_low <= power_mid <= power_high."""
-    obj = GwasBinomialTrait(mu=0.3, alpha=0.05)
+    obj = GwasBinomialTrait(mu=0.3)
     lo, mid, hi = obj.binomial_trait_power_with_nvar(
-        n=2000, af=0.2, beta=0.05, n_mean=10, n_var=10, n_sigma=1.0
+        n=2000, af=0.2, beta=0.05, n_mean=10, n_var=10, n_sigma=1.0, alpha=0.05
     )
     assert lo <= mid <= hi
 
@@ -415,37 +415,37 @@ def test_gwas_binomial_invalid_mu():
 
 def test_binomial_trait_beta_power_self_consistent():
     """power(opt_beta) should recover the target power (solver round-trip)."""
-    obj = GwasBinomialTrait(mu=0.3, alpha=0.05)
+    obj = GwasBinomialTrait(mu=0.3)
     for af in [0.1, 0.3, 0.5]:
-        opt_beta = obj.binomial_trait_beta_power(n=5000, af=af, n_mean=10, power=0.8)
+        opt_beta = obj.binomial_trait_beta_power(n=5000, af=af, n_mean=10, power=0.8, alpha=0.05)
         if not np.isnan(opt_beta):
-            recovered = obj.binomial_trait_power(n=5000, af=af, beta=opt_beta, n_mean=10)
+            recovered = obj.binomial_trait_power(n=5000, af=af, beta=opt_beta, n_mean=10, alpha=0.05)
             assert abs(recovered - 0.8) < 1e-4, f"af={af}: power={recovered:.4f}"
 
 
 def test_binomial_trait_beta_power_mid_af():
     """beta_max bug: at af=0.5, mu=0.3 the old cap (0.35) exceeded the valid range (0.3).
     The solver must return a finite, valid beta."""
-    obj = GwasBinomialTrait(mu=0.3, alpha=0.05)
-    opt_beta = obj.binomial_trait_beta_power(n=50000, af=0.5, n_mean=10, power=0.8)
+    obj = GwasBinomialTrait(mu=0.3)
+    opt_beta = obj.binomial_trait_beta_power(n=50000, af=0.5, n_mean=10, power=0.8, alpha=0.05)
     assert not np.isnan(opt_beta)
     assert opt_beta < 0.3  # strict validity bound at af=0.5, mu=0.3
 
 
 def test_power_curve_matches_scalar():
     """Vectorised power_curve must match per-point binomial_trait_power calls."""
-    obj = GwasBinomialTrait(mu=0.3, alpha=0.05)
+    obj = GwasBinomialTrait(mu=0.3)
     ns = np.array([500, 1000, 2000, 5000, 10000])
-    curve = obj.power_curve(ns, af=0.2, beta=0.05, n_mean=10)
-    scalar = np.array([obj.binomial_trait_power(n, af=0.2, beta=0.05, n_mean=10) for n in ns])
+    curve = obj.power_curve(ns, af=0.2, beta=0.05, n_mean=10, alpha=0.05)
+    scalar = np.array([obj.binomial_trait_power(n, af=0.2, beta=0.05, n_mean=10, alpha=0.05) for n in ns])
     np.testing.assert_allclose(curve, scalar, rtol=1e-10)
 
 
 def test_power_curve_monotone():
     """Power must be non-decreasing in sample size."""
-    obj = GwasBinomialTrait(mu=0.3, alpha=0.05)
+    obj = GwasBinomialTrait(mu=0.3)
     ns = np.linspace(100, 20000, 50)
-    curve = obj.power_curve(ns, af=0.2, beta=0.05, n_mean=10)
+    curve = obj.power_curve(ns, af=0.2, beta=0.05, n_mean=10, alpha=0.05)
     assert np.all(np.diff(curve) >= 0)
 
 
@@ -459,9 +459,9 @@ def test_ncp_binomial_r2_scales_ncp():
 
 def test_binomial_trait_power_r2_reduces_power():
     """Imperfect imputation (r2 < 1) strictly reduces power."""
-    obj = GwasBinomialTrait(mu=0.3, alpha=0.05)
-    pwr_full = obj.binomial_trait_power(n=2000, af=0.2, beta=0.05, n_mean=10, r2=1.0)
-    pwr_partial = obj.binomial_trait_power(n=2000, af=0.2, beta=0.05, n_mean=10, r2=0.7)
+    obj = GwasBinomialTrait(mu=0.3)
+    pwr_full = obj.binomial_trait_power(n=2000, af=0.2, beta=0.05, n_mean=10, r2=1.0, alpha=0.05)
+    pwr_partial = obj.binomial_trait_power(n=2000, af=0.2, beta=0.05, n_mean=10, r2=0.7, alpha=0.05)
     assert pwr_partial < pwr_full
 
 

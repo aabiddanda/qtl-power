@@ -374,18 +374,16 @@ class GwasBinomialTrait(Gwas):
     and the typed/imputed tag; r2=1 recovers the perfectly-typed case.
     """
 
-    def __init__(self, mu=0.5, alpha=5e-8):
+    def __init__(self, mu=0.5):
         """Initialize a binomial GWAS power calculator.
 
         Args:
             mu (`float`): population mean success probability (0 < mu < 1).
-            alpha (`float`): significance threshold (default 5e-8).
         """
         super().__init__()
         if not (0.0 < mu < 1.0):
             raise ValueError("mu must be strictly between 0 and 1.")
         self.mu = mu
-        self.alpha = alpha
 
     @staticmethod
     def mu_from_p0(p0, af, beta):
@@ -516,7 +514,7 @@ class GwasBinomialTrait(Gwas):
         cv2_denom = var_tg2n / ((var_g * n_mean)**2 * n)
         return np.sqrt(lam**2 * cv2_denom)
 
-    def binomial_trait_power(self, n=100, af=0.2, beta=0.05, n_mean=10.0, r2=1.0):
+    def binomial_trait_power(self, n=100, af=0.2, beta=0.05, n_mean=10.0, r2=1.0, alpha=5e-8):
         """Power to detect the association under the binomial trait model.
 
         Args:
@@ -525,14 +523,15 @@ class GwasBinomialTrait(Gwas):
             beta (`float`): per-allele change in success probability.
             n_mean (`float`): mean trials per individual.
             r2 (`float`): LD / imputation-accuracy r² (0 < r2 <= 1).
+            alpha (`float`): p-value threshold.
         Returns:
             power (`float`): power in [0, 1].
         """
         ncp = self.ncp_binomial(n, af, beta, n_mean, r2)
-        return self.llr_power(alpha=self.alpha, df=1, ncp=ncp)
+        return self.llr_power(alpha=alpha, df=1, ncp=ncp)
 
     def binomial_trait_power_with_nvar(
-        self, n=100, af=0.2, beta=0.05, n_mean=10.0, n_var=0.0, n_sigma=1.0, r2=1.0
+        self, n=100, af=0.2, beta=0.05, n_mean=10.0, n_var=0.0, n_sigma=1.0, r2=1.0, alpha=5e-8
     ):
         """Power with ± n_sigma uncertainty bands from variable trial counts.
 
@@ -544,18 +543,19 @@ class GwasBinomialTrait(Gwas):
             n_var (`float`): variance of trials per individual.
             n_sigma (`float`): number of NCP standard deviations for bands.
             r2 (`float`): LD / imputation-accuracy r² (0 < r2 <= 1).
+            alpha (`float`): p-value threshold.
         Returns:
             (power_low, power_mid, power_high) (`tuple[float, float, float]`).
         """
         lam = self.ncp_binomial(n, af, beta, n_mean, r2)
         sd = self.ncp_binomial_sd(n, af, beta, n_mean, n_var, r2)
         return (
-            self.llr_power(alpha=self.alpha, df=1, ncp=max(0.0, lam - n_sigma * sd)),
-            self.llr_power(alpha=self.alpha, df=1, ncp=lam),
-            self.llr_power(alpha=self.alpha, df=1, ncp=lam + n_sigma * sd),
+            self.llr_power(alpha=alpha, df=1, ncp=max(0.0, lam - n_sigma * sd)),
+            self.llr_power(alpha=alpha, df=1, ncp=lam),
+            self.llr_power(alpha=alpha, df=1, ncp=lam + n_sigma * sd),
         )
 
-    def binomial_trait_opt_n(self, af=0.2, beta=0.05, n_mean=10.0, power=0.8, r2=1.0):
+    def binomial_trait_opt_n(self, af=0.2, beta=0.05, n_mean=10.0, power=0.8, r2=1.0, alpha=5e-8):
         """Minimum sample size to achieve target power.
 
         Args:
@@ -564,18 +564,19 @@ class GwasBinomialTrait(Gwas):
             n_mean (`float`): mean trials per individual.
             power (`float`): target power level.
             r2 (`float`): LD / imputation-accuracy r² (0 < r2 <= 1).
+            alpha (`float`): p-value threshold.
         Returns:
             opt_n (`float`): required N (fractional; take ceil in practice).
         """
         assert (0.0 < power < 1.0)
-        f = lambda n: self.binomial_trait_power(n, af, beta, n_mean, r2) - power
+        f = lambda n: self.binomial_trait_power(n, af, beta, n_mean, r2, alpha) - power
         try:
             opt_n = root_scalar(f, bracket=(1.0, 1e10)).root
         except (OverflowError, ValueError):
             opt_n = np.nan
         return opt_n
 
-    def binomial_trait_beta_power(self, n=100, af=0.2, n_mean=10.0, power=0.8, r2=1.0):
+    def binomial_trait_beta_power(self, n=100, af=0.2, n_mean=10.0, power=0.8, r2=1.0, alpha=5e-8):
         """Minimum detectable |beta| at the target power level.
 
         beta is bounded above so that p_i = mu + beta*(g-2*af) stays in (0,1).
@@ -587,6 +588,7 @@ class GwasBinomialTrait(Gwas):
             n_mean (`float`): mean trials per individual.
             power (`float`): target power level.
             r2 (`float`): LD / imputation-accuracy r² (0 < r2 <= 1).
+            alpha (`float`): p-value threshold.
         Returns:
             opt_beta (`float`): minimum detectable beta.
         """
@@ -596,14 +598,14 @@ class GwasBinomialTrait(Gwas):
         #   g=0 carrier: mu - 2*af*beta     > 0  =>  beta < mu     / (2*af)
         beta_max = min((1.0 - self.mu) / (2.0 * (1.0 - af)),
                        self.mu / (2.0 * af)) * 0.9999
-        f = lambda b: self.binomial_trait_power(n, af, b, n_mean, r2) - power
+        f = lambda b: self.binomial_trait_power(n, af, b, n_mean, r2, alpha) - power
         try:
             opt_beta = root_scalar(f, bracket=(1e-9, beta_max)).root
         except (OverflowError, ValueError):
             opt_beta = np.nan
         return opt_beta
 
-    def power_curve(self, sample_sizes, af=0.2, beta=0.05, n_mean=10.0, r2=1.0):
+    def power_curve(self, sample_sizes, af=0.2, beta=0.05, n_mean=10.0, r2=1.0, alpha=5e-8):
         """Power as a function of sample size.
 
         Vectorised: all NCPs are computed in one pass, then a single ncx2.cdf
@@ -615,11 +617,12 @@ class GwasBinomialTrait(Gwas):
             beta (`float`): per-allele change in success probability.
             n_mean (`float`): mean trials per individual.
             r2 (`float`): LD / imputation-accuracy r² (0 < r2 <= 1).
+            alpha (`float`): p-value threshold.
         Returns:
             powers (`np.ndarray`): power at each sample size.
         """
         ns = np.asarray(sample_sizes, dtype=float)
         var_g = 2.0 * af * (1.0 - af)
         ncps = r2 * ns * beta**2 * var_g * n_mean / (self.mu * (1.0 - self.mu))
-        chi2_crit = ncx2.ppf(1.0 - self.alpha, df=1, nc=0)
+        chi2_crit = ncx2.ppf(1.0 - alpha, df=1, nc=0)
         return 1.0 - ncx2.cdf(chi2_crit, df=1, nc=ncps)
