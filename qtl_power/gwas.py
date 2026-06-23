@@ -84,7 +84,9 @@ class GwasQuant(Gwas):
         """
         assert (power >= 0) & (power <= 1)
         f = (
-            lambda beta: self.quant_trait_power(n=n, af=af, r2=r2, beta=beta, alpha=alpha)
+            lambda beta: self.quant_trait_power(
+                n=n, af=af, r2=r2, beta=beta, alpha=alpha
+            )
             - power
         )
         try:
@@ -143,7 +145,9 @@ class GwasBinary(Gwas):
         assert (af >= 0.0) and (af <= 1.0)
         assert (r2 >= 0) & (r2 <= 1.0)
         assert (prop_cases > 0) & (prop_cases < 1.0)
-        ncp = r2 * n * 2 * af * (1.0 - af) * prop_cases * (1.0 - prop_cases) * (beta**2)
+        ncp = (
+            r2 * n * 2 * af * (1.0 - af) * prop_cases * (1.0 - prop_cases) * (beta**2)
+        )
         return ncp
 
     def binary_trait_power(
@@ -267,9 +271,9 @@ class GwasBinaryModel(Gwas):
         aa_prob = x[0] * prev / denom
         ab_prob = x[1] * prev / denom
         case_af = (aa_prob * geno_freq[0] + ab_prob * geno_freq[1] * 0.5) / prev
-        control_af = ((1.0 - aa_prob) * geno_freq[0] + (1.0 - ab_prob) * geno_freq[1] * 0.5) / (
-            1.0 - prev
-        )
+        control_af = (
+            (1.0 - aa_prob) * geno_freq[0] + (1.0 - ab_prob) * geno_freq[1] * 0.5
+        ) / (1.0 - prev)
         v_cases = case_af * (1.0 - case_af)
         v_control = control_af * (1.0 - control_af)
         ncp = (case_af - control_af) / (
@@ -379,6 +383,7 @@ class GwasBinomialTrait(Gwas):
 
         Args:
             mu (`float`): population mean success probability (0 < mu < 1).
+
         """
         super().__init__()
         if not (0.0 < mu < 1.0):
@@ -395,6 +400,7 @@ class GwasBinomialTrait(Gwas):
             beta (`float`): per-allele change in success probability.
         Returns:
             mu (`float`): population mean success probability.
+
         """
         return p0 + 2.0 * af * beta
 
@@ -414,6 +420,7 @@ class GwasBinomialTrait(Gwas):
             n_mean (`float`): mean number of trials per individual.
         Returns:
             beta_sd (`float`): effect size in units of phenotypic SD.
+
         """
         return beta * np.sqrt(n_mean / (mu * (1.0 - mu)))
 
@@ -429,6 +436,7 @@ class GwasBinomialTrait(Gwas):
             n_mean (`float`): mean number of trials per individual.
         Returns:
             beta (`float`): per-allele change in success probability.
+
         """
         return beta_sd / np.sqrt(n_mean / (mu * (1.0 - mu)))
 
@@ -447,6 +455,7 @@ class GwasBinomialTrait(Gwas):
             mu (`float`): population mean success probability.
         Returns:
             log_or (`float`): approximate log-odds ratio per allele.
+
         """
         return beta / (mu * (1.0 - mu))
 
@@ -461,6 +470,7 @@ class GwasBinomialTrait(Gwas):
             mu (`float`): population mean success probability.
         Returns:
             beta (`float`): approximate per-allele change in success probability.
+
         """
         return log_or * mu * (1.0 - mu)
 
@@ -475,16 +485,17 @@ class GwasBinomialTrait(Gwas):
             r2 (`float`): LD / imputation-accuracy r² between causal and typed variant (0 < r2 <= 1).
         Returns:
             ncp (`float`): non-centrality parameter.
+
         """
         assert n > 0
-        assert (0.0 < af < 1.0)
+        assert 0.0 < af < 1.0
         assert n_mean > 0
-        assert (0.0 < r2 <= 1.0)
+        assert 0.0 < r2 <= 1.0
         var_g = 2.0 * af * (1.0 - af)
         return r2 * n * beta**2 * var_g * n_mean / (self.mu * (1.0 - self.mu))
 
     def ncp_binomial_sd(self, n=100, af=0.2, beta=0.05, n_mean=10.0, n_var=0.0, r2=1.0):
-        """Standard deviation of the realised NCP due to variable trial counts.
+        """Return the standard deviation of the realised NCP due to variable trial counts.
 
         By the delta method the variance of the realised NCP is:
             Var(lambda) = lambda^2 * Var(tg^2 * n) / (E[tg^2 * n])^2 / N
@@ -500,6 +511,7 @@ class GwasBinomialTrait(Gwas):
             r2 (`float`): LD / imputation-accuracy r² (0 < r2 <= 1).
         Returns:
             sd (`float`): standard deviation of the realised NCP.
+
         """
         assert n_var >= 0.0
         if n_var == 0.0:
@@ -507,13 +519,19 @@ class GwasBinomialTrait(Gwas):
         lam = self.ncp_binomial(n, af, beta, n_mean, r2)
         var_g = 2.0 * af * (1.0 - af)
         # E[(g - 2*af)^4] under HWE
-        etg4 = (-2*af)**4 * (1-af)**2 + (1 - 2*af)**4 * 2*af*(1-af) + (2*(1-af))**4 * af**2
+        etg4 = (
+            (-2 * af) ** 4 * (1 - af) ** 2
+            + (1 - 2 * af) ** 4 * 2 * af * (1 - af)
+            + (2 * (1 - af)) ** 4 * af**2
+        )
         en2 = n_var + n_mean**2
-        var_tg2n = etg4 * en2 - (var_g * n_mean)**2
-        cv2_denom = var_tg2n / ((var_g * n_mean)**2 * n)
+        var_tg2n = etg4 * en2 - (var_g * n_mean) ** 2
+        cv2_denom = var_tg2n / ((var_g * n_mean) ** 2 * n)
         return np.sqrt(lam**2 * cv2_denom)
 
-    def binomial_trait_power(self, n=100, af=0.2, beta=0.05, n_mean=10.0, r2=1.0, alpha=5e-8):
+    def binomial_trait_power(
+        self, n=100, af=0.2, beta=0.05, n_mean=10.0, r2=1.0, alpha=5e-8
+    ):
         """Power to detect the association under the binomial trait model.
 
         Args:
@@ -525,12 +543,21 @@ class GwasBinomialTrait(Gwas):
             alpha (`float`): p-value threshold.
         Returns:
             power (`float`): power in [0, 1].
+
         """
         ncp = self.ncp_binomial(n, af, beta, n_mean, r2)
         return self.llr_power(alpha=alpha, df=1, ncp=ncp)
 
     def binomial_trait_power_with_nvar(
-        self, n=100, af=0.2, beta=0.05, n_mean=10.0, n_var=0.0, n_sigma=1.0, r2=1.0, alpha=5e-8
+        self,
+        n=100,
+        af=0.2,
+        beta=0.05,
+        n_mean=10.0,
+        n_var=0.0,
+        n_sigma=1.0,
+        r2=1.0,
+        alpha=5e-8,
     ):
         """Power with ± n_sigma uncertainty bands from variable trial counts.
 
@@ -545,6 +572,7 @@ class GwasBinomialTrait(Gwas):
             alpha (`float`): p-value threshold.
         Returns:
             (power_low, power_mid, power_high) (`tuple[float, float, float]`).
+
         """
         lam = self.ncp_binomial(n, af, beta, n_mean, r2)
         sd = self.ncp_binomial_sd(n, af, beta, n_mean, n_var, r2)
@@ -554,7 +582,9 @@ class GwasBinomialTrait(Gwas):
             self.llr_power(alpha=alpha, df=1, ncp=lam + n_sigma * sd),
         )
 
-    def binomial_trait_opt_n(self, af=0.2, beta=0.05, n_mean=10.0, power=0.8, r2=1.0, alpha=5e-8):
+    def binomial_trait_opt_n(
+        self, af=0.2, beta=0.05, n_mean=10.0, power=0.8, r2=1.0, alpha=5e-8
+    ):
         """Minimum sample size to achieve target power.
 
         Args:
@@ -566,8 +596,9 @@ class GwasBinomialTrait(Gwas):
             alpha (`float`): p-value threshold.
         Returns:
             opt_n (`float`): required N (fractional; take ceil in practice).
+
         """
-        assert (0.0 < power < 1.0)
+        assert 0.0 < power < 1.0
         f = lambda n: self.binomial_trait_power(n, af, beta, n_mean, r2, alpha) - power
         try:
             opt_n = root_scalar(f, bracket=(1.0, 1e10)).root
@@ -575,7 +606,9 @@ class GwasBinomialTrait(Gwas):
             opt_n = np.nan
         return opt_n
 
-    def binomial_trait_beta_power(self, n=100, af=0.2, n_mean=10.0, power=0.8, r2=1.0, alpha=5e-8):
+    def binomial_trait_beta_power(
+        self, n=100, af=0.2, n_mean=10.0, power=0.8, r2=1.0, alpha=5e-8
+    ):
         """Minimum detectable |beta| at the target power level.
 
         beta is bounded above so that p_i = mu + beta*(g-2*af) stays in (0,1).
@@ -590,13 +623,15 @@ class GwasBinomialTrait(Gwas):
             alpha (`float`): p-value threshold.
         Returns:
             opt_beta (`float`): minimum detectable beta.
+
         """
-        assert (0.0 < power < 1.0)
+        assert 0.0 < power < 1.0
         # Tightest constraint keeping p_i in (0,1) for all genotypes:
         #   g=2 carrier: mu + 2*(1-af)*beta < 1  =>  beta < (1-mu) / (2*(1-af))
         #   g=0 carrier: mu - 2*af*beta     > 0  =>  beta < mu     / (2*af)
-        beta_max = min((1.0 - self.mu) / (2.0 * (1.0 - af)),
-                       self.mu / (2.0 * af)) * 0.9999
+        beta_max = (
+            min((1.0 - self.mu) / (2.0 * (1.0 - af)), self.mu / (2.0 * af)) * 0.9999
+        )
         f = lambda b: self.binomial_trait_power(n, af, b, n_mean, r2, alpha) - power
         try:
             opt_beta = root_scalar(f, bracket=(1e-9, beta_max)).root
@@ -604,7 +639,9 @@ class GwasBinomialTrait(Gwas):
             opt_beta = np.nan
         return opt_beta
 
-    def power_curve(self, sample_sizes, af=0.2, beta=0.05, n_mean=10.0, r2=1.0, alpha=5e-8):
+    def power_curve(
+        self, sample_sizes, af=0.2, beta=0.05, n_mean=10.0, r2=1.0, alpha=5e-8
+    ):
         """Power as a function of sample size.
 
         Vectorised: all NCPs are computed in one pass, then a single ncx2.cdf
@@ -619,6 +656,7 @@ class GwasBinomialTrait(Gwas):
             alpha (`float`): p-value threshold.
         Returns:
             powers (`np.ndarray`): power at each sample size.
+
         """
         ns = np.asarray(sample_sizes, dtype=float)
         var_g = 2.0 * af * (1.0 - af)
@@ -628,7 +666,7 @@ class GwasBinomialTrait(Gwas):
 
 
 class GwasPoisson(Gwas):
-    """GWAS power calculator for a Poisson count trait.
+    r"""GWAS power calculator for a Poisson count trait.
 
     The outcome :math:`Y_i \\sim \\text{Poisson}(\\mu_i)` is linked to the
     additive genotype :math:`g_i \\in \\{0, 1, 2\\}` (HWE) via:
@@ -657,11 +695,12 @@ class GwasPoisson(Gwas):
     """
 
     def __init__(self, mu=1.0, link="log"):
-        """Initialise a Poisson GWAS power calculator.
+        r"""Initialise a Poisson GWAS power calculator.
 
         Args:
             mu (`float`): population mean count at null (:math:`\\mu > 0`).
             link (`str`): ``'log'`` (default) or ``'identity'``.
+
         """
         super().__init__()
         if not (mu > 0.0):
@@ -673,7 +712,7 @@ class GwasPoisson(Gwas):
 
     @staticmethod
     def beta_to_fold_change(beta):
-        """Fold change in rate per allele copy (log link only).
+        r"""Fold change in rate per allele copy (log link only).
 
         .. math::
 
@@ -683,12 +722,13 @@ class GwasPoisson(Gwas):
             beta (`float`): log-rate-ratio per allele.
         Returns:
             fold_change (`float`): multiplicative rate ratio per allele.
+
         """
         return np.exp(beta)
 
     @staticmethod
     def beta_to_log_rr(beta, mu):
-        """Convert an identity-link :math:`\\beta` to an approximate log-rate-ratio.
+        r"""Convert an identity-link :math:`\\beta` to an approximate log-rate-ratio.
 
         First-order delta method on the log transformation:
 
@@ -703,12 +743,13 @@ class GwasPoisson(Gwas):
             mu (`float`): population mean count.
         Returns:
             log_rr (`float`): approximate log-rate-ratio per allele.
+
         """
         return beta / mu
 
     @staticmethod
     def log_rr_to_beta(log_rr, mu):
-        """Convert a log-rate-ratio to an approximate identity-link :math:`\\beta`.
+        r"""Convert a log-rate-ratio to an approximate identity-link :math:`\\beta`.
 
         Inverse of :meth:`beta_to_log_rr` (same small-effect approximation applies):
 
@@ -721,11 +762,12 @@ class GwasPoisson(Gwas):
             mu (`float`): population mean count.
         Returns:
             beta (`float`): approximate per-allele rate change.
+
         """
         return log_rr * mu
 
     def ncp_poisson(self, n=100, af=0.2, beta=0.1, r2=1.0):
-        """Non-centrality parameter for the Poisson-trait score test.
+        r"""Non-centrality parameter for the Poisson-trait score test.
 
         .. math::
 
@@ -739,10 +781,11 @@ class GwasPoisson(Gwas):
             r2 (`float`): LD / imputation-accuracy :math:`r^2` (:math:`0 < r^2 \\leq 1`).
         Returns:
             ncp (`float`): non-centrality parameter.
+
         """
         assert n > 0
-        assert (0.0 < af < 1.0)
-        assert (0.0 < r2 <= 1.0)
+        assert 0.0 < af < 1.0
+        assert 0.0 < r2 <= 1.0
         var_g = 2.0 * af * (1.0 - af)
         if self.link == "log":
             return r2 * n * beta**2 * var_g * self.mu
@@ -750,7 +793,7 @@ class GwasPoisson(Gwas):
             return r2 * n * beta**2 * var_g / self.mu
 
     def poisson_trait_power(self, n=100, af=0.2, beta=0.1, r2=1.0, alpha=5e-8):
-        """Power to detect association under the Poisson trait model.
+        r"""Power to detect association under the Poisson trait model.
 
         Args:
             n (`int`): number of individuals.
@@ -760,12 +803,13 @@ class GwasPoisson(Gwas):
             alpha (`float`): p-value threshold.
         Returns:
             power (`float`): power in :math:`[0, 1]`.
+
         """
         ncp = self.ncp_poisson(n, af, beta, r2)
         return self.llr_power(alpha=alpha, df=1, ncp=ncp)
 
     def poisson_trait_opt_n(self, af=0.2, beta=0.1, power=0.8, r2=1.0, alpha=5e-8):
-        """Minimum sample size to achieve target power.
+        r"""Minimum sample size to achieve target power.
 
         Args:
             af (`float`): allele frequency.
@@ -775,8 +819,9 @@ class GwasPoisson(Gwas):
             alpha (`float`): p-value threshold.
         Returns:
             opt_n (`float`): required :math:`N` (fractional; take :math:`\\lceil \\cdot \\rceil` in practice).
+
         """
-        assert (0.0 < power < 1.0)
+        assert 0.0 < power < 1.0
         f = lambda n: self.poisson_trait_power(n, af, beta, r2, alpha) - power
         try:
             opt_n = root_scalar(f, bracket=(1.0, 1e10)).root
@@ -785,7 +830,7 @@ class GwasPoisson(Gwas):
         return opt_n
 
     def poisson_trait_beta_power(self, n=100, af=0.2, power=0.8, r2=1.0, alpha=5e-8):
-        """Minimum detectable :math:`|\\beta|` at the target power level.
+        r"""Minimum detectable :math:`|\\beta|` at the target power level.
 
         The solver bracket upper bound is:
 
@@ -802,8 +847,9 @@ class GwasPoisson(Gwas):
             alpha (`float`): p-value threshold.
         Returns:
             opt_beta (`float`): minimum detectable :math:`\\beta`.
+
         """
-        assert (0.0 < power < 1.0)
+        assert 0.0 < power < 1.0
         if self.link == "log":
             beta_max = np.log(100)
         else:
@@ -817,7 +863,7 @@ class GwasPoisson(Gwas):
         return opt_beta
 
     def power_curve(self, sample_sizes, af=0.2, beta=0.1, r2=1.0, alpha=5e-8):
-        """Power as a function of sample size (vectorised).
+        r"""Power as a function of sample size (vectorised).
 
         All NCPs are computed in one pass and a single :func:`ncx2.cdf` call is
         made — no Python loop over sample sizes.
@@ -830,6 +876,7 @@ class GwasPoisson(Gwas):
             alpha (`float`): p-value threshold.
         Returns:
             powers (`np.ndarray`): power at each sample size.
+
         """
         ns = np.asarray(sample_sizes, dtype=float)
         var_g = 2.0 * af * (1.0 - af)
