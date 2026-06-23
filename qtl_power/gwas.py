@@ -625,3 +625,217 @@ class GwasBinomialTrait(Gwas):
         ncps = r2 * ns * beta**2 * var_g * n_mean / (self.mu * (1.0 - self.mu))
         chi2_crit = ncx2.ppf(1.0 - alpha, df=1, nc=0)
         return 1.0 - ncx2.cdf(chi2_crit, df=1, nc=ncps)
+
+
+class GwasPoisson(Gwas):
+    """GWAS power calculator for a Poisson count trait.
+
+    The outcome :math:`Y_i \\sim \\text{Poisson}(\\mu_i)` is linked to the
+    additive genotype :math:`g_i \\in \\{0, 1, 2\\}` (HWE) via:
+
+    **Log link** (default, :math:`\\beta` is a log-rate-ratio per allele):
+
+    .. math::
+
+        \\log(\\mu_i) = \\log(\\mu) + \\beta\\,(g_i - 2\\,\\text{af})
+
+    **Identity link** (:math:`\\beta` is an absolute rate change per allele):
+
+    .. math::
+
+        \\mu_i = \\mu + \\beta\\,(g_i - 2\\,\\text{af})
+
+    :math:`\\mu` is the population mean count at the null.  The genotype is
+    mean-centred (:math:`g_i - 2\\,\\text{af}`) so the NCP is symmetric in af.
+
+    The score-test non-centrality parameter is:
+
+    .. math::
+
+        \\lambda = r^2 \\, N \\, \\beta^2 \\cdot 2\\,\\text{af}(1-\\text{af}) \\cdot
+        \\begin{cases} \\mu & \\text{log link} \\\\ 1/\\mu & \\text{identity link} \\end{cases}
+    """
+
+    def __init__(self, mu=1.0, link="log"):
+        """Initialise a Poisson GWAS power calculator.
+
+        Args:
+            mu (`float`): population mean count at null (:math:`\\mu > 0`).
+            link (`str`): ``'log'`` (default) or ``'identity'``.
+        """
+        super().__init__()
+        if not (mu > 0.0):
+            raise ValueError("mu must be strictly positive.")
+        if link not in ("log", "identity"):
+            raise ValueError("link must be 'log' or 'identity'.")
+        self.mu = mu
+        self.link = link
+
+    @staticmethod
+    def beta_to_fold_change(beta):
+        """Fold change in rate per allele copy (log link only).
+
+        .. math::
+
+            \\text{fold change} = e^{\\beta}
+
+        Args:
+            beta (`float`): log-rate-ratio per allele.
+        Returns:
+            fold_change (`float`): multiplicative rate ratio per allele.
+        """
+        return np.exp(beta)
+
+    @staticmethod
+    def beta_to_log_rr(beta, mu):
+        """Convert an identity-link :math:`\\beta` to an approximate log-rate-ratio.
+
+        First-order delta method on the log transformation:
+
+        .. math::
+
+            \\log\\text{RR} \\approx \\frac{\\beta}{\\mu}
+
+        Accurate when :math:`\\beta \\ll \\mu`.
+
+        Args:
+            beta (`float`): per-allele rate change (identity-link units).
+            mu (`float`): population mean count.
+        Returns:
+            log_rr (`float`): approximate log-rate-ratio per allele.
+        """
+        return beta / mu
+
+    @staticmethod
+    def log_rr_to_beta(log_rr, mu):
+        """Convert a log-rate-ratio to an approximate identity-link :math:`\\beta`.
+
+        Inverse of :meth:`beta_to_log_rr` (same small-effect approximation applies):
+
+        .. math::
+
+            \\beta \\approx \\mu \\cdot \\log\\text{RR}
+
+        Args:
+            log_rr (`float`): log-rate-ratio per allele.
+            mu (`float`): population mean count.
+        Returns:
+            beta (`float`): approximate per-allele rate change.
+        """
+        return log_rr * mu
+
+    def ncp_poisson(self, n=100, af=0.2, beta=0.1, r2=1.0):
+        """Non-centrality parameter for the Poisson-trait score test.
+
+        .. math::
+
+            \\lambda = r^2 \\, N \\, \\beta^2 \\cdot 2\\,\\text{af}(1-\\text{af}) \\cdot
+            \\begin{cases} \\mu & \\text{log link} \\\\ 1/\\mu & \\text{identity link} \\end{cases}
+
+        Args:
+            n (`int`): number of individuals.
+            af (`float`): allele frequency (:math:`0 < \\text{af} < 1`).
+            beta (`float`): per-allele log-rate-ratio (log link) or rate change (identity link).
+            r2 (`float`): LD / imputation-accuracy :math:`r^2` (:math:`0 < r^2 \\leq 1`).
+        Returns:
+            ncp (`float`): non-centrality parameter.
+        """
+        assert n > 0
+        assert (0.0 < af < 1.0)
+        assert (0.0 < r2 <= 1.0)
+        var_g = 2.0 * af * (1.0 - af)
+        if self.link == "log":
+            return r2 * n * beta**2 * var_g * self.mu
+        else:
+            return r2 * n * beta**2 * var_g / self.mu
+
+    def poisson_trait_power(self, n=100, af=0.2, beta=0.1, r2=1.0, alpha=5e-8):
+        """Power to detect association under the Poisson trait model.
+
+        Args:
+            n (`int`): number of individuals.
+            af (`float`): allele frequency.
+            beta (`float`): per-allele log-rate-ratio (log link) or rate change (identity link).
+            r2 (`float`): LD / imputation-accuracy :math:`r^2` (:math:`0 < r^2 \\leq 1`).
+            alpha (`float`): p-value threshold.
+        Returns:
+            power (`float`): power in :math:`[0, 1]`.
+        """
+        ncp = self.ncp_poisson(n, af, beta, r2)
+        return self.llr_power(alpha=alpha, df=1, ncp=ncp)
+
+    def poisson_trait_opt_n(self, af=0.2, beta=0.1, power=0.8, r2=1.0, alpha=5e-8):
+        """Minimum sample size to achieve target power.
+
+        Args:
+            af (`float`): allele frequency.
+            beta (`float`): per-allele log-rate-ratio (log link) or rate change (identity link).
+            power (`float`): target power level.
+            r2 (`float`): LD / imputation-accuracy :math:`r^2` (:math:`0 < r^2 \\leq 1`).
+            alpha (`float`): p-value threshold.
+        Returns:
+            opt_n (`float`): required :math:`N` (fractional; take :math:`\\lceil \\cdot \\rceil` in practice).
+        """
+        assert (0.0 < power < 1.0)
+        f = lambda n: self.poisson_trait_power(n, af, beta, r2, alpha) - power
+        try:
+            opt_n = root_scalar(f, bracket=(1.0, 1e10)).root
+        except (OverflowError, ValueError):
+            opt_n = np.nan
+        return opt_n
+
+    def poisson_trait_beta_power(self, n=100, af=0.2, power=0.8, r2=1.0, alpha=5e-8):
+        """Minimum detectable :math:`|\\beta|` at the target power level.
+
+        The solver bracket upper bound is:
+
+        - **Log link**: :math:`\\log(100)` (no analytical bound; cap avoids blowup).
+        - **Identity link**: :math:`\\mu / (2\\,\\text{af})`, the tightest constraint
+          keeping all Poisson means positive
+          (:math:`\\mu_i = \\mu + \\beta(g_i - 2\\,\\text{af}) > 0` at :math:`g_i = 0`).
+
+        Args:
+            n (`int`): number of individuals.
+            af (`float`): allele frequency.
+            power (`float`): target power level.
+            r2 (`float`): LD / imputation-accuracy :math:`r^2` (:math:`0 < r^2 \\leq 1`).
+            alpha (`float`): p-value threshold.
+        Returns:
+            opt_beta (`float`): minimum detectable :math:`\\beta`.
+        """
+        assert (0.0 < power < 1.0)
+        if self.link == "log":
+            beta_max = np.log(100)
+        else:
+            # g=0 genotype: mu - 2*af*beta > 0  =>  beta < mu/(2*af)
+            beta_max = self.mu / (2.0 * af) * 0.9999
+        f = lambda b: self.poisson_trait_power(n, af, b, r2, alpha) - power
+        try:
+            opt_beta = root_scalar(f, bracket=(1e-9, beta_max)).root
+        except (OverflowError, ValueError):
+            opt_beta = np.nan
+        return opt_beta
+
+    def power_curve(self, sample_sizes, af=0.2, beta=0.1, r2=1.0, alpha=5e-8):
+        """Power as a function of sample size (vectorised).
+
+        All NCPs are computed in one pass and a single :func:`ncx2.cdf` call is
+        made — no Python loop over sample sizes.
+
+        Args:
+            sample_sizes (`array-like`): array of :math:`N` values.
+            af (`float`): allele frequency.
+            beta (`float`): per-allele log-rate-ratio (log link) or rate change (identity link).
+            r2 (`float`): LD / imputation-accuracy :math:`r^2` (:math:`0 < r^2 \\leq 1`).
+            alpha (`float`): p-value threshold.
+        Returns:
+            powers (`np.ndarray`): power at each sample size.
+        """
+        ns = np.asarray(sample_sizes, dtype=float)
+        var_g = 2.0 * af * (1.0 - af)
+        if self.link == "log":
+            ncps = r2 * ns * beta**2 * var_g * self.mu
+        else:
+            ncps = r2 * ns * beta**2 * var_g / self.mu
+        chi2_crit = ncx2.ppf(1.0 - alpha, df=1, nc=0)
+        return 1.0 - ncx2.cdf(chi2_crit, df=1, nc=ncps)
