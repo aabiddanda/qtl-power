@@ -1,5 +1,6 @@
 """Testing module for GWAS power calculations."""
 import numpy as np
+import pytest
 from hypothesis import assume, given, settings
 from hypothesis import strategies as st
 
@@ -291,3 +292,12 @@ def test_power_vc_first_order_model1(j, n, tev, alpha, test, df):
     power = obj.power_vc_first_order_model1(ws, ps, n, tev, alpha, df)
     if ~np.isnan(power):
         assert (power >= 0) & (power <= 1)
+
+
+def test_ncp_burden_test_model3_not_implemented():
+    """ncp_burden_test_model3 raises NotImplementedError — model S3 is not yet available."""
+    obj = RareVariantBurdenPower()
+    ws = np.array([1.0, 2.0, 3.0])
+    ps = np.array([0.1, 0.2, 0.3])
+    with pytest.raises(NotImplementedError):
+        obj.ncp_burden_test_model3(ws, ps, n=100, jd=2, tev=0.1)

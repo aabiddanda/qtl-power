@@ -1,6 +1,7 @@
 """Testing module for GWAS power calculations."""
 import numpy as np
 import pytest
+from unittest.mock import patch
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
@@ -652,3 +653,51 @@ def test_poisson_r2_reduces_power():
         pwr_full = obj.poisson_trait_power(n=2000, af=0.2, beta=0.1, r2=1.0, alpha=0.05)
         pwr_partial = obj.poisson_trait_power(n=2000, af=0.2, beta=0.1, r2=0.7, alpha=0.05)
         assert pwr_partial < pwr_full, f"link={link}: r2<1 did not reduce power"
+
+
+# ---------------------------------------------------------------------------
+# Exception / nan-return path coverage
+# ---------------------------------------------------------------------------
+
+def test_llr_power_returns_nan_on_overflow():
+    """llr_power returns nan when ncx2 raises OverflowError.
+
+    This path guards against numerical overflow in older scipy versions;
+    we verify it with a mock since modern scipy handles extreme values
+    internally without raising.
+    """
+    obj = Gwas()
+    with patch("qtl_power.gwas.ncx2.cdf", side_effect=OverflowError):
+        result = obj.llr_power(alpha=5e-8, df=1, ncp=1.0)
+    assert np.isnan(result)
+
+
+def test_binomial_trait_opt_n_returns_nan_for_negligible_beta():
+    """binomial_trait_opt_n returns nan when beta is too small to ever reach target power.
+
+    With beta=1e-10 the NCP at N=1e10 is ~0, so root_scalar can't bracket a root
+    and falls through to the except branch.
+    """
+    obj = GwasBinomialTrait(mu=0.5)
+    opt_n = obj.binomial_trait_opt_n(af=0.01, beta=1e-10, n_mean=1, power=0.8, alpha=5e-8)
+    assert np.isnan(opt_n)
+
+
+def test_binomial_trait_beta_power_returns_nan_when_n_too_small():
+    """binomial_trait_beta_power returns nan when n=1 cannot reach target power at any valid beta.
+
+    At n=1 the NCP ceiling is far below the chi-squared critical value for
+    alpha=5e-8, so power < target across the entire bracket and root_scalar
+    raises ValueError.
+    """
+    obj = GwasBinomialTrait(mu=0.5)
+    opt_beta = obj.binomial_trait_beta_power(n=1, af=0.5, n_mean=1, power=0.8, alpha=5e-8)
+    assert np.isnan(opt_beta)
+
+
+def test_poisson_trait_beta_power_returns_nan_when_n_too_small():
+    """poisson_trait_beta_power returns nan when n=1 cannot reach target power at any valid beta."""
+    for link in ("log", "identity"):
+        obj = GwasPoisson(mu=1.0, link=link)
+        opt_beta = obj.poisson_trait_beta_power(n=1, af=0.5, power=0.8, alpha=5e-8)
+        assert np.isnan(opt_beta), f"link={link}: expected nan"
