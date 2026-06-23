@@ -11,12 +11,12 @@ class ExtremePhenotype:
         """Initialize the class for an extreme phenotype design."""
         pass
 
-    def sim_extreme_pheno(self, n=100, maf=0.01, beta=0.1, seed=42):
+    def sim_extreme_pheno(self, n=100, af=0.01, beta=0.1, seed=42):
         """Simulate an extreme phenotype under an HWE assumption.
 
         Args:
             n (`int`): total sample size.
-            maf (`float`): minor allele frequency of tested variant.
+            af (`float`): allele frequency of tested variant (must be <= 0.5).
             beta (`float`): effect-size in standard deviations.
             seed (`int`): random seed for simulations.
         Returns:
@@ -26,21 +26,21 @@ class ExtremePhenotype:
         """
         assert seed > 0
         assert n > 0
-        assert (maf > 0) & (maf <= 0.5)
+        assert (af > 0) & (af <= 0.5)
         np.random.seed(seed)
-        allele_count = np.random.binomial(2, maf, size=n)
+        allele_count = np.random.binomial(2, af, size=n)
         phenotype = np.random.normal(size=n) + beta * allele_count
         return allele_count, phenotype
 
     def est_power_extreme_pheno(
-        self, n=100, maf=0.01, beta=0.1, niter=100, alpha=0.05, q0=0.1, q1=0.1
+        self, n=100, af=0.01, beta=0.1, niter=100, alpha=0.05, q0=0.1, q1=0.1
     ):
         """
         Estimate the power from an extreme-phenotype sampling design.
 
         Args:
             n (`int`): total sample size.
-            maf (`float`): minor allele frequency of tested variant.
+            af (`float`): allele frequency of tested variant (must be <= 0.5).
             beta (`float`): effect-size in standard deviations.
             niter (`int`): number of simulation iterations.
             alpha (`float`): significance threshold for Fishers Exact Test.
@@ -57,7 +57,7 @@ class ExtremePhenotype:
         assert (alpha > 0) and (alpha < 1.0)
         n_reject = 0
         for i in range(niter):
-            ac, phenotype = self.sim_extreme_pheno(n=n, maf=maf, beta=beta, seed=i + 1)
+            ac, phenotype = self.sim_extreme_pheno(n=n, af=af, beta=beta, seed=i + 1)
             excontrols = phenotype <= np.quantile(phenotype, q0)  # bottom percentiles
             excases = phenotype >= np.quantile(phenotype, 1 - q1)  # top-percentiles
             table = np.array(

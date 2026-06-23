@@ -35,12 +35,12 @@ class GwasQuant(Gwas):
         """Initialize a GWAS power calculator for quantitative traits."""
         super(GwasQuant, self).__init__()
 
-    def ncp_quant(self, n=100, p=0.1, beta=0.1, r2=1.0):
+    def ncp_quant(self, n=100, af=0.1, beta=0.1, r2=1.0):
         """Compute the non-centrality parameter for a quantitative trait GWAS.
 
         Args:
             n (`int`): sample-size of unrelated individuals.
-            p (`float`): minor allele frequency of variant.
+            af (`float`): allele frequency of variant.
             beta (`float`): effect-size of variant.
             r2 (`float`): correlation r2 between causal variant and tagging variant.
         Returns:
@@ -48,17 +48,17 @@ class GwasQuant(Gwas):
 
         """
         assert n > 0
-        assert (p > 0.0) and (p < 1.0)
+        assert (af > 0.0) and (af < 1.0)
         assert (r2 > 0) & (r2 <= 1.0)
-        ncp = r2 * n * 2 * p * (1.0 - p) * (beta**2)
+        ncp = r2 * n * 2 * af * (1.0 - af) * (beta**2)
         return ncp
 
-    def quant_trait_power(self, n=100, p=0.1, beta=0.1, r2=1.0, alpha=5e-8):
+    def quant_trait_power(self, n=100, af=0.1, beta=0.1, r2=1.0, alpha=5e-8):
         """Power for a quantitative trait association study.
 
         Args:
             n (`int`): sample-size of unrelated individuals.
-            p (`float`): minor allele frequency of variant.
+            af (`float`): allele frequency of variant.
             beta (`float`): effect-size of variant.
             r2 (`float`): correlation r2 between causal variant and tagging variant.
             alpha (`float`): p-value threshold for GWAS
@@ -66,16 +66,16 @@ class GwasQuant(Gwas):
             ncp (`float`): non-centrality parameter.
 
         """
-        ncp = self.ncp_quant(n, p, beta, r2)
+        ncp = self.ncp_quant(n, af, beta, r2)
         return self.llr_power(alpha, df=1, ncp=ncp)
 
-    def quant_trait_beta_power(self, n=100, power=0.90, p=0.1, r2=1.0, alpha=5e-8):
+    def quant_trait_beta_power(self, n=100, power=0.90, af=0.1, r2=1.0, alpha=5e-8):
         """Determine the effect-size required to detect an association at this MAF.
 
         Args:
             n (`int`): sample-size of unrelated individuals.
             power (`float`): threshold power level.
-            p (`float`): minor allele frequency of variant.
+            af (`float`): allele frequency of variant.
             r2 (`float`): correlation r2 between causal variant and tagging variant.
             alpha (`float`): p-value threshold for GWAS
         Returns:
@@ -84,7 +84,7 @@ class GwasQuant(Gwas):
         """
         assert (power >= 0) & (power <= 1)
         f = (
-            lambda beta: self.quant_trait_power(n=n, p=p, r2=r2, beta=beta, alpha=alpha)
+            lambda beta: self.quant_trait_power(n=n, af=af, r2=r2, beta=beta, alpha=alpha)
             - power
         )
         try:
@@ -93,13 +93,13 @@ class GwasQuant(Gwas):
             opt_beta = np.nan
         return opt_beta
 
-    def quant_trait_opt_n(self, beta=0.1, power=0.90, p=0.1, r2=1.0, alpha=5e-8):
+    def quant_trait_opt_n(self, beta=0.1, power=0.90, af=0.1, r2=1.0, alpha=5e-8):
         """Determine the sample-size required to detect this effect.
 
         Args:
             beta (`float`): effect-size of the variant.
             power (`float`): threshold power level.
-            p (`float`): minor allele frequency of variant.
+            af (`float`): allele frequency of variant.
             r2 (`float`): correlation r2 between causal variant and tagging variant.
             alpha (`float`): p-value threshold for GWAS
 
@@ -109,7 +109,7 @@ class GwasQuant(Gwas):
         """
         assert (power >= 0) & (power <= 1)
         f = (
-            lambda n: self.quant_trait_power(n=n, p=p, r2=r2, beta=beta, alpha=alpha)
+            lambda n: self.quant_trait_power(n=n, af=af, r2=r2, beta=beta, alpha=alpha)
             - power
         )
         try:
@@ -126,12 +126,12 @@ class GwasBinary(Gwas):
         """Initialize a GWAS power calculator for case/control traits."""
         super(GwasBinary, self).__init__()
 
-    def ncp_binary(self, n=100, p=0.1, beta=0.1, r2=1.0, prop_cases=0.1):
+    def ncp_binary(self, n=100, af=0.1, beta=0.1, r2=1.0, prop_cases=0.1):
         """Determine the effect-size required to detect an association at this MAF.
 
         Args:
             n (`int`): sample-size of unrelated individuals.
-            p (`float`): minor allele frequency of variant.
+            af (`float`): allele frequency of variant.
             beta (`float`): effect-size of variant.
             r2 (`float`): correlation r2 between causal variant and tagging variant.
             prop_cases (`float`): proportion of samples that are cases.
@@ -140,20 +140,20 @@ class GwasBinary(Gwas):
 
         """
         assert n > 0
-        assert (p >= 0.0) and (p <= 1.0)
+        assert (af >= 0.0) and (af <= 1.0)
         assert (r2 >= 0) & (r2 <= 1.0)
         assert (prop_cases > 0) & (prop_cases < 1.0)
-        ncp = r2 * n * 2 * p * (1.0 - p) * prop_cases * (1.0 - prop_cases) * (beta**2)
+        ncp = r2 * n * 2 * af * (1.0 - af) * prop_cases * (1.0 - prop_cases) * (beta**2)
         return ncp
 
     def binary_trait_power(
-        self, n=100, p=0.1, beta=0.1, r2=1.0, alpha=5e-8, prop_cases=0.1
+        self, n=100, af=0.1, beta=0.1, r2=1.0, alpha=5e-8, prop_cases=0.1
     ):
         """Power under a case-control GWAS study design.
 
         Args:
             n (`int`): sample-size of unrelated individuals.
-            p (`float`): minor allele frequency of variant.
+            af (`float`): allele frequency of variant.
             beta (`float`): effect-size of variant.
             r2 (`float`): correlation r2 between causal variant and tagging variant.
             alpha (`float`): p-value threshold for detection.
@@ -162,11 +162,11 @@ class GwasBinary(Gwas):
             ncp  (`float`): non-centrality parameter.
 
         """
-        ncp = self.ncp_binary(n, p, beta, r2, prop_cases)
+        ncp = self.ncp_binary(n, af, beta, r2, prop_cases)
         return self.llr_power(alpha, df=1, ncp=ncp)
 
     def binary_trait_beta_power(
-        self, n=100, power=0.90, p=0.1, r2=1.0, alpha=5e-8, prop_cases=0.5
+        self, n=100, power=0.90, af=0.1, r2=1.0, alpha=5e-8, prop_cases=0.5
     ):
         """Optimal detectable effect-size under a case-control GWAS study design.
 
@@ -183,12 +183,12 @@ class GwasBinary(Gwas):
 
         """
         assert n > 0
-        assert (p > 0) & (p < 1)
+        assert (af > 0) & (af < 1)
         assert (r2 >= 0.0) & (r2 <= 1.0)
         assert (power > 0) & (power < 1)
         f = (
             lambda beta: self.binary_trait_power(
-                n=n, p=p, r2=r2, beta=beta, alpha=alpha, prop_cases=prop_cases
+                n=n, af=af, r2=r2, beta=beta, alpha=alpha, prop_cases=prop_cases
             )
             - power
         )
@@ -199,14 +199,14 @@ class GwasBinary(Gwas):
         return opt_beta
 
     def binary_trait_opt_n(
-        self, beta=0.1, power=0.90, p=0.1, r2=1.0, alpha=5e-8, prop_cases=0.5
+        self, beta=0.1, power=0.90, af=0.1, r2=1.0, alpha=5e-8, prop_cases=0.5
     ):
         """Determine the sample-size required to detect this effect.
 
         Args:
             beta (`float`): effect-size of the variant.
             power (`float`): threshold power level.
-            p (`float`): minor allele frequency of variant.
+            af (`float`): allele frequency of variant.
             r2 (`float`): correlation r2 between causal variant and tagging variant.
             alpha (`float`): p-value threshold for GWAS
             prop_cases (`float`): proportion of cases in the dataset
@@ -218,7 +218,7 @@ class GwasBinary(Gwas):
         assert (power >= 0) & (power <= 1)
         f = (
             lambda n: self.binary_trait_power(
-                n=n, p=p, r2=r2, beta=beta, alpha=alpha, prop_cases=prop_cases
+                n=n, af=af, r2=r2, beta=beta, alpha=alpha, prop_cases=prop_cases
             )
             - power
         )
@@ -239,7 +239,7 @@ class GwasBinaryModel(Gwas):
     def ncp_binary_model(
         self,
         n=100,
-        p=0.1,
+        af=0.1,
         beta=0.1,
         model="additive",
         prev=0.01,
@@ -249,7 +249,7 @@ class GwasBinaryModel(Gwas):
         """Explore how multiple models affect power in case-control traits."""
         assert (prev > 0) & (prev < 1.0)
         assert n > 0
-        assert (p > 0) & (p < 1)
+        assert (af > 0) & (af < 1)
         if model == "additive":
             x = np.array([1.0 + 2 * beta, 1.0 + beta, 1.0])
         elif model == "dominant":
@@ -262,12 +262,12 @@ class GwasBinaryModel(Gwas):
             )
         n_cases = n * prop_cases
         n_control = n * (1.0 - prop_cases)
-        af = np.array([p**2, 2 * p * (1.0 - p), (1 - p) ** 2])
-        denom = (x * af).sum()
+        geno_freq = np.array([af**2, 2 * af * (1.0 - af), (1 - af) ** 2])
+        denom = (x * geno_freq).sum()
         aa_prob = x[0] * prev / denom
         ab_prob = x[1] * prev / denom
-        case_af = (aa_prob * af[0] + ab_prob * af[1] * 0.5) / prev
-        control_af = ((1.0 - aa_prob) * af[0] + (1.0 - ab_prob) * af[1] * 0.5) / (
+        case_af = (aa_prob * geno_freq[0] + ab_prob * geno_freq[1] * 0.5) / prev
+        control_af = ((1.0 - aa_prob) * geno_freq[0] + (1.0 - ab_prob) * geno_freq[1] * 0.5) / (
             1.0 - prev
         )
         v_cases = case_af * (1.0 - case_af)
@@ -280,7 +280,7 @@ class GwasBinaryModel(Gwas):
     def binary_trait_power_model(
         self,
         n=100,
-        p=0.1,
+        af=0.1,
         beta=0.1,
         model="additive",
         prev=0.01,
@@ -291,7 +291,7 @@ class GwasBinaryModel(Gwas):
 
         Args:
             n (`int`): sample-size of unrelated individuals.
-            p (`float`): minor allele frequency of variant.
+            af (`float`): allele frequency of variant.
             beta (`float`): effect-size of variant (in terms of relative-risk).
             model (`string`): genetic model for effects (additive, recessive, or dominant).
             prev (`float`): prevalence of the trait in question.
@@ -304,7 +304,7 @@ class GwasBinaryModel(Gwas):
         """
         ncp = self.ncp_binary_model(
             n=n,
-            p=p,
+            af=af,
             beta=beta,
             model=model,
             prev=prev,
@@ -316,7 +316,7 @@ class GwasBinaryModel(Gwas):
     def binary_trait_beta_power_model(
         self,
         n=100,
-        p=0.1,
+        af=0.1,
         model="additive",
         prev=0.01,
         alpha=5e-8,
@@ -327,7 +327,7 @@ class GwasBinaryModel(Gwas):
 
         Args:
             n (`int`): sample-size of unrelated individuals.
-            p (`float`): minor allele frequency of variant.
+            af (`float`): allele frequency of variant.
             beta (`float`): effect-size of variant (in terms of relative-risk).
             model (`string`): genetic model for effects (additive, recessive, or dominant).
             prev (`float`): prevalence of the trait in question.
@@ -343,7 +343,7 @@ class GwasBinaryModel(Gwas):
         f = (
             lambda beta: self.binary_trait_power_model(
                 n=n,
-                p=p,
+                af=af,
                 beta=beta,
                 model=model,
                 prev=prev,
@@ -505,10 +505,9 @@ class GwasBinomialTrait(Gwas):
         if n_var == 0.0:
             return 0.0
         lam = self.ncp_binomial(n, af, beta, n_mean, r2)
-        p, q = af, 1.0 - af
-        var_g = 2.0 * p * q
-        # E[(g - 2p)^4] under HWE
-        etg4 = (-2*p)**4 * q**2 + (1 - 2*p)**4 * 2*p*q + (2*q)**4 * p**2
+        var_g = 2.0 * af * (1.0 - af)
+        # E[(g - 2*af)^4] under HWE
+        etg4 = (-2*af)**4 * (1-af)**2 + (1 - 2*af)**4 * 2*af*(1-af) + (2*(1-af))**4 * af**2
         en2 = n_var + n_mean**2
         var_tg2n = etg4 * en2 - (var_g * n_mean)**2
         cv2_denom = var_tg2n / ((var_g * n_mean)**2 * n)
