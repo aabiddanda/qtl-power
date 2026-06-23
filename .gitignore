@@ -6,7 +6,7 @@ sandbox/
 build/
 qtl_power.egg-info/
 .DS_Store
-docsrc/_build/
-docsrc/stubs/
+docs/_build/
+docs/stubs/
 dist/*
 CLAUDE.md

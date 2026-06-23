@@ -19,5 +19,5 @@ help:
 %: Makefile
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
-copy:
-	cp -r _build/html/ ../docs/
+clean:
+	rm -rf $(BUILDDIR)
