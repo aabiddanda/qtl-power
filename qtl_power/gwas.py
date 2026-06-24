@@ -12,12 +12,20 @@ class Gwas:
         pass
 
     def llr_power(self, alpha=5e-8, df=1, ncp=1):
-        """Power under a non-central chi-squared distribution.
+        r"""Power under a non-central chi-squared distribution.
+
+        .. math::
+
+            \text{power} = 1 - F_{\chi^2(df,\,\lambda)}\!\left(q_{1-\alpha}\right)
+
+        where :math:`q_{1-\alpha}` is the :math:`(1-\alpha)` quantile of the
+        central :math:`\chi^2(df)` distribution and :math:`\lambda` is the
+        non-centrality parameter.
 
         Args:
             alpha (`float`): p-value threshold for GWAS
             df (`int`): degrees of freedom
-            ncp (`float`): non-centrality parameter
+            ncp (`float`): non-centrality parameter :math:`\lambda`
         Returns:
             power (`float`): power for association
 
@@ -29,22 +37,39 @@ class Gwas:
 
 
 class GwasQuant(Gwas):
-    """Class for power calculations of a GWAS for a quantitative trait."""
+    r"""Power calculations for a GWAS on a standardised quantitative trait.
+
+    The linear model is :math:`Y_i = \mu + \beta\,g_i + \varepsilon_i` with
+    :math:`\varepsilon_i \sim N(0, 1)` and additive genotype
+    :math:`g_i \in \{0, 1, 2\}` (HWE).  The score-test NCP is:
+
+    .. math::
+
+        \lambda = r^2 \, N \, \beta^2 \cdot 2\,\text{af}(1 - \text{af})
+
+    where :math:`r^2` is the LD / imputation-accuracy squared correlation
+    between the causal variant and the typed tag.
+    """
 
     def __init__(self):
         """Initialize a GWAS power calculator for quantitative traits."""
         super(GwasQuant, self).__init__()
 
     def ncp_quant(self, n=100, af=0.1, beta=0.1, r2=1.0):
-        """Compute the non-centrality parameter for a quantitative trait GWAS.
+        r"""Non-centrality parameter for a quantitative trait GWAS.
+
+        .. math::
+
+            \lambda = r^2 \, N \, \beta^2 \cdot 2\,\text{af}(1 - \text{af})
 
         Args:
             n (`int`): sample-size of unrelated individuals.
-            af (`float`): allele frequency of variant.
-            beta (`float`): effect-size of variant.
-            r2 (`float`): correlation r2 between causal variant and tagging variant.
+            af (`float`): allele frequency of variant (:math:`0 < \text{af} < 1`).
+            beta (`float`): per-allele effect size in phenotypic-SD units.
+            r2 (`float`): LD :math:`r^2` between causal and tagged variant
+                (:math:`0 < r^2 \leq 1`).
         Returns:
-            ncp (`float`): non-centrality parameter.
+            ncp (`float`): non-centrality parameter :math:`\lambda`.
 
         """
         assert n > 0
@@ -54,32 +79,32 @@ class GwasQuant(Gwas):
         return ncp
 
     def quant_trait_power(self, n=100, af=0.1, beta=0.1, r2=1.0, alpha=5e-8):
-        """Power for a quantitative trait association study.
+        r"""Power for a quantitative trait association study.
 
         Args:
             n (`int`): sample-size of unrelated individuals.
-            af (`float`): allele frequency of variant.
-            beta (`float`): effect-size of variant.
-            r2 (`float`): correlation r2 between causal variant and tagging variant.
-            alpha (`float`): p-value threshold for GWAS
+            af (`float`): allele frequency of variant (:math:`0 < \text{af} < 1`).
+            beta (`float`): per-allele effect size in phenotypic-SD units.
+            r2 (`float`): LD :math:`r^2` (:math:`0 < r^2 \leq 1`).
+            alpha (`float`): p-value threshold for GWAS.
         Returns:
-            ncp (`float`): non-centrality parameter.
+            power (`float`): power in :math:`[0, 1]`.
 
         """
         ncp = self.ncp_quant(n, af, beta, r2)
         return self.llr_power(alpha, df=1, ncp=ncp)
 
     def quant_trait_beta_power(self, n=100, power=0.90, af=0.1, r2=1.0, alpha=5e-8):
-        """Determine the effect-size required to detect an association at this MAF.
+        r"""Minimum detectable effect size at the target power level.
 
         Args:
             n (`int`): sample-size of unrelated individuals.
-            power (`float`): threshold power level.
-            af (`float`): allele frequency of variant.
-            r2 (`float`): correlation r2 between causal variant and tagging variant.
-            alpha (`float`): p-value threshold for GWAS
+            power (`float`): target power level in :math:`(0, 1)`.
+            af (`float`): allele frequency of variant (:math:`0 < \text{af} < 1`).
+            r2 (`float`): LD :math:`r^2` (:math:`0 < r^2 \leq 1`).
+            alpha (`float`): p-value threshold for GWAS.
         Returns:
-            opt_beta  (`float`): optimal beta for detection at a specific power level
+            opt_beta (`float`): minimum detectable :math:`|\beta|`.
 
         """
         assert (power >= 0) & (power <= 1)
@@ -96,17 +121,18 @@ class GwasQuant(Gwas):
         return opt_beta
 
     def quant_trait_opt_n(self, beta=0.1, power=0.90, af=0.1, r2=1.0, alpha=5e-8):
-        """Determine the sample-size required to detect this effect.
+        r"""Minimum sample size to achieve the target power.
 
         Args:
-            beta (`float`): effect-size of the variant.
-            power (`float`): threshold power level.
-            af (`float`): allele frequency of variant.
-            r2 (`float`): correlation r2 between causal variant and tagging variant.
-            alpha (`float`): p-value threshold for GWAS
+            beta (`float`): per-allele effect size in phenotypic-SD units.
+            power (`float`): target power level in :math:`(0, 1)`.
+            af (`float`): allele frequency of variant (:math:`0 < \text{af} < 1`).
+            r2 (`float`): LD :math:`r^2` (:math:`0 < r^2 \leq 1`).
+            alpha (`float`): p-value threshold for GWAS.
 
         Returns:
-            opt_n  (`float`): optimal sample size for detection at this power-level.
+            opt_n (`float`): required :math:`N` (fractional; take
+                :math:`\lceil \cdot \rceil` in practice).
 
         """
         assert (power >= 0) & (power <= 1)
@@ -122,23 +148,42 @@ class GwasQuant(Gwas):
 
 
 class GwasBinary(Gwas):
-    """GWAS Power calculator for Case/Control study design."""
+    r"""GWAS power calculator for a case/control study design.
+
+    Under an additive model the score-test NCP is:
+
+    .. math::
+
+        \lambda = r^2 \, N \, \beta^2 \cdot 2\,\text{af}(1-\text{af}) \cdot K(1-K)
+
+    where :math:`K` is the proportion of cases, :math:`\beta` is the
+    per-allele log-OR (small-effect linear approximation), and :math:`r^2` is
+    the LD / imputation-accuracy squared correlation.
+    """
 
     def __init__(self):
         """Initialize a GWAS power calculator for case/control traits."""
         super(GwasBinary, self).__init__()
 
     def ncp_binary(self, n=100, af=0.1, beta=0.1, r2=1.0, prop_cases=0.1):
-        """Determine the effect-size required to detect an association at this MAF.
+        r"""Non-centrality parameter for a case/control GWAS.
+
+        .. math::
+
+            \lambda = r^2 \, N \, \beta^2 \cdot 2\,\text{af}(1-\text{af})
+                      \cdot K(1-K)
+
+        where :math:`K` = ``prop_cases``.
 
         Args:
             n (`int`): sample-size of unrelated individuals.
-            af (`float`): allele frequency of variant.
-            beta (`float`): effect-size of variant.
-            r2 (`float`): correlation r2 between causal variant and tagging variant.
-            prop_cases (`float`): proportion of samples that are cases.
+            af (`float`): allele frequency (:math:`0 \leq \text{af} \leq 1`).
+            beta (`float`): per-allele effect size (linear approximation to log-OR).
+            r2 (`float`): LD :math:`r^2` (:math:`0 \leq r^2 \leq 1`).
+            prop_cases (`float`): proportion of samples that are cases
+                (:math:`0 < K < 1`).
         Returns:
-            ncp  (`float`): non-centrality parameter.
+            ncp (`float`): non-centrality parameter :math:`\lambda`.
 
         """
         assert n > 0
@@ -153,17 +198,17 @@ class GwasBinary(Gwas):
     def binary_trait_power(
         self, n=100, af=0.1, beta=0.1, r2=1.0, alpha=5e-8, prop_cases=0.1
     ):
-        """Power under a case-control GWAS study design.
+        r"""Power under a case-control GWAS study design.
 
         Args:
             n (`int`): sample-size of unrelated individuals.
-            af (`float`): allele frequency of variant.
-            beta (`float`): effect-size of variant.
-            r2 (`float`): correlation r2 between causal variant and tagging variant.
+            af (`float`): allele frequency (:math:`0 < \text{af} < 1`).
+            beta (`float`): per-allele effect size.
+            r2 (`float`): LD :math:`r^2` (:math:`0 \leq r^2 \leq 1`).
             alpha (`float`): p-value threshold for detection.
             prop_cases (`float`): proportion of samples that are cases.
         Returns:
-            ncp  (`float`): non-centrality parameter.
+            power (`float`): power in :math:`[0, 1]`.
 
         """
         ncp = self.ncp_binary(n, af, beta, r2, prop_cases)
@@ -172,18 +217,18 @@ class GwasBinary(Gwas):
     def binary_trait_beta_power(
         self, n=100, power=0.90, af=0.1, r2=1.0, alpha=5e-8, prop_cases=0.5
     ):
-        """Optimal detectable effect-size under a case-control GWAS study design.
+        r"""Minimum detectable effect size under a case-control GWAS study design.
 
         Args:
             n (`int`): sample-size of unrelated individuals.
-            power (`float`): .
-            beta (`float`): effect-size of variant.
-            r2 (`float`): correlation r2 between causal variant and tag variant.
+            power (`float`): target power level in :math:`(0, 1)`.
+            af (`float`): allele frequency (:math:`0 < \text{af} < 1`).
+            r2 (`float`): LD :math:`r^2` (:math:`0 \leq r^2 \leq 1`).
             alpha (`float`): p-value threshold for detection.
             prop_cases (`float`): proportion of samples that are cases.
 
         Returns:
-            ncp  (`float`): non-centrality parameter.
+            opt_beta (`float`): minimum detectable :math:`|\beta|`.
 
         """
         assert n > 0
@@ -205,18 +250,19 @@ class GwasBinary(Gwas):
     def binary_trait_opt_n(
         self, beta=0.1, power=0.90, af=0.1, r2=1.0, alpha=5e-8, prop_cases=0.5
     ):
-        """Determine the sample-size required to detect this effect.
+        r"""Minimum sample size to achieve the target power.
 
         Args:
-            beta (`float`): effect-size of the variant.
-            power (`float`): threshold power level.
-            af (`float`): allele frequency of variant.
-            r2 (`float`): correlation r2 between causal variant and tagging variant.
-            alpha (`float`): p-value threshold for GWAS
-            prop_cases (`float`): proportion of cases in the dataset
+            beta (`float`): per-allele effect size.
+            power (`float`): target power level in :math:`(0, 1)`.
+            af (`float`): allele frequency (:math:`0 < \text{af} < 1`).
+            r2 (`float`): LD :math:`r^2` (:math:`0 \leq r^2 \leq 1`).
+            alpha (`float`): p-value threshold for GWAS.
+            prop_cases (`float`): proportion of cases in the dataset.
 
         Returns:
-            opt_n  (`float`): optimal sample size for detection at this power-level.
+            opt_n (`float`): required :math:`N` (fractional; take
+                :math:`\lceil \cdot \rceil` in practice).
 
         """
         assert (power >= 0) & (power <= 1)
@@ -364,18 +410,30 @@ class GwasBinaryModel(Gwas):
 
 
 class GwasBinomialTrait(Gwas):
-    """GWAS power calculator for a binomial count trait.
+    r"""GWAS power calculator for a binomial count trait.
 
-    Model: Y_i ~ Binomial(n_i, p_i),  p_i = mu + beta*(g_i - 2*af)
+    Each individual contributes :math:`n_i` Bernoulli trials:
 
-    g_i in {0,1,2} is the additive genotype under HWE.  The genotype is
-    mean-centred so the NCP is symmetric in af.  mu is the *population mean*
-    success probability E[p_i], which is invariant when sweeping af.
+    .. math::
 
-    NCP: lambda = r2 * N * beta^2 * 2*af*(1-af) * n_mean / (mu*(1-mu))
+        Y_i \sim \text{Binomial}(n_i,\; p_i),\quad
+        p_i = \mu + \beta\,(g_i - 2\,\text{af})
 
-    r2 is the LD / imputation-accuracy correlation between the causal variant
-    and the typed/imputed tag; r2=1 recovers the perfectly-typed case.
+    where :math:`g_i \in \{0, 1, 2\}` is the additive genotype under HWE and
+    the genotype is mean-centred so that :math:`\mu = E[p_i]` is the
+    *population mean* success probability, invariant when sweeping af.
+
+    The score-test non-centrality parameter is:
+
+    .. math::
+
+        \lambda = r^2 \, N \, \beta^2 \cdot 2\,\text{af}(1-\text{af}) \cdot
+                  \frac{\bar{n}}{\mu(1-\mu)}
+
+    where :math:`\bar{n}` is the mean number of trials per individual and
+    :math:`r^2` is the LD / imputation-accuracy squared correlation between the
+    causal variant and the typed/imputed tag (:math:`r^2 = 1` gives the
+    perfectly-typed case).
     """
 
     def __init__(self, mu=0.5):
@@ -392,10 +450,14 @@ class GwasBinomialTrait(Gwas):
 
     @staticmethod
     def mu_from_p0(p0, af, beta):
-        """Convert baseline probability p0 = Pr(success | g=0) to population mean mu.
+        r"""Convert baseline probability :math:`p_0 = \Pr(\text{success} \mid g=0)` to population mean :math:`\mu`.
+
+        .. math::
+
+            \mu = p_0 + 2\,\text{af}\cdot\beta
 
         Args:
-            p0 (`float`): success probability for the aa genotype.
+            p0 (`float`): success probability for the :math:`g=0` genotype.
             af (`float`): allele frequency.
             beta (`float`): per-allele change in success probability.
         Returns:
@@ -406,18 +468,23 @@ class GwasBinomialTrait(Gwas):
 
     @staticmethod
     def beta_to_sd_units(beta, mu, n_mean):
-        """Convert raw probability beta to phenotypic-SD units (comparable to quantitative GWAS).
+        r"""Convert raw probability :math:`\beta` to phenotypic-SD units.
 
-        The per-individual rate Y_i/n_i has variance mu*(1-mu)/n_mean, so:
-            beta_sd = beta / sqrt(mu*(1-mu) / n_mean)
+        The per-individual rate :math:`Y_i/n_i` has variance
+        :math:`\mu(1-\mu)/\bar{n}`, so:
 
-        This is exact under the identity-link model and shows that deeper
-        sequencing (larger n_mean) makes the same raw beta appear larger in SD units.
+        .. math::
+
+            \beta_\text{SD} = \frac{\beta}{\sqrt{\mu(1-\mu)/\bar{n}}}
+
+        This is exact under the identity-link model.  Deeper sequencing (larger
+        :math:`\bar{n}`) makes the same raw :math:`\beta` appear larger in SD
+        units.
 
         Args:
             beta (`float`): per-allele change in success probability (raw units).
             mu (`float`): population mean success probability.
-            n_mean (`float`): mean number of trials per individual.
+            n_mean (`float`): mean number of trials per individual :math:`\bar{n}`.
         Returns:
             beta_sd (`float`): effect size in units of phenotypic SD.
 
@@ -426,14 +493,18 @@ class GwasBinomialTrait(Gwas):
 
     @staticmethod
     def sd_units_to_beta(beta_sd, mu, n_mean):
-        """Convert SD-unit effect size back to raw probability units.
+        r"""Convert SD-unit effect size back to raw probability units.
 
-        Inverse of beta_to_sd_units.
+        Inverse of :meth:`beta_to_sd_units`:
+
+        .. math::
+
+            \beta = \beta_\text{SD} \cdot \sqrt{\frac{\mu(1-\mu)}{\bar{n}}}
 
         Args:
             beta_sd (`float`): effect size in units of phenotypic SD.
             mu (`float`): population mean success probability.
-            n_mean (`float`): mean number of trials per individual.
+            n_mean (`float`): mean number of trials per individual :math:`\bar{n}`.
         Returns:
             beta (`float`): per-allele change in success probability.
 
@@ -442,13 +513,17 @@ class GwasBinomialTrait(Gwas):
 
     @staticmethod
     def beta_to_log_or(beta, mu):
-        """Convert raw probability beta to an approximate log-odds ratio.
+        r"""Convert raw probability :math:`\beta` to an approximate log-odds ratio.
 
         First-order delta method on the logit transformation:
-            log(OR) ≈ beta / (mu*(1-mu))
 
-        Valid when beta is small relative to mu*(1-mu). Accuracy degrades when
-        mu is near 0 or 1, or when the raw beta is large.
+        .. math::
+
+            \log\text{OR} \approx \frac{\beta}{\mu(1-\mu)}
+
+        Valid when :math:`\beta` is small relative to :math:`\mu(1-\mu)`.
+        Accuracy degrades when :math:`\mu` is near 0 or 1, or when the raw
+        :math:`\beta` is large.
 
         Args:
             beta (`float`): per-allele change in success probability (raw units).
@@ -461,9 +536,13 @@ class GwasBinomialTrait(Gwas):
 
     @staticmethod
     def log_or_to_beta(log_or, mu):
-        """Convert a log-odds ratio to an approximate raw probability beta.
+        r"""Convert a log-odds ratio to an approximate raw probability :math:`\beta`.
 
-        Inverse of beta_to_log_or (same small-effect approximation applies).
+        Inverse of :meth:`beta_to_log_or` (same small-effect approximation applies):
+
+        .. math::
+
+            \beta \approx \log\text{OR} \cdot \mu(1-\mu)
 
         Args:
             log_or (`float`): log-odds ratio per allele.
@@ -475,16 +554,23 @@ class GwasBinomialTrait(Gwas):
         return log_or * mu * (1.0 - mu)
 
     def ncp_binomial(self, n=100, af=0.2, beta=0.05, n_mean=10.0, r2=1.0):
-        """Non-centrality parameter for the binomial-trait score test.
+        r"""Non-centrality parameter for the binomial-trait score test.
+
+        .. math::
+
+            \lambda = r^2 \, N \, \beta^2 \cdot 2\,\text{af}(1-\text{af}) \cdot
+                      \frac{\bar{n}}{\mu(1-\mu)}
 
         Args:
             n (`int`): number of individuals.
-            af (`float`): allele frequency (0 < af < 1).
+            af (`float`): allele frequency (:math:`0 < \text{af} < 1`).
             beta (`float`): per-allele change in success probability.
-            n_mean (`float`): mean number of Binomial trials per individual.
-            r2 (`float`): LD / imputation-accuracy r² between causal and typed variant (0 < r2 <= 1).
+            n_mean (`float`): mean number of Binomial trials per individual
+                :math:`\bar{n}`.
+            r2 (`float`): LD / imputation-accuracy :math:`r^2` between causal
+                and typed variant (:math:`0 < r^2 \leq 1`).
         Returns:
-            ncp (`float`): non-centrality parameter.
+            ncp (`float`): non-centrality parameter :math:`\lambda`.
 
         """
         assert n > 0
@@ -495,20 +581,27 @@ class GwasBinomialTrait(Gwas):
         return r2 * n * beta**2 * var_g * n_mean / (self.mu * (1.0 - self.mu))
 
     def ncp_binomial_sd(self, n=100, af=0.2, beta=0.05, n_mean=10.0, n_var=0.0, r2=1.0):
-        """Return the standard deviation of the realised NCP due to variable trial counts.
+        r"""Standard deviation of the realised NCP due to variable trial counts.
 
-        By the delta method the variance of the realised NCP is:
-            Var(lambda) = lambda^2 * Var(tg^2 * n) / (E[tg^2 * n])^2 / N
+        By the delta method:
 
-        Returns 0.0 when n_var == 0 (fixed-n design).
+        .. math::
+
+            \text{Var}(\lambda) \approx
+            \lambda^2 \cdot \frac{\text{Var}(\tilde{g}^2 n_i)}
+                                  {\bigl(E[\tilde{g}^2]\,\bar{n}\bigr)^2 \, N}
+
+        where :math:`\tilde{g} = g - 2\,\text{af}`.  Returns 0.0 when
+        ``n_var`` = 0 (fixed-trial design).
 
         Args:
             n (`int`): number of individuals.
-            af (`float`): allele frequency.
+            af (`float`): allele frequency (:math:`0 < \text{af} < 1`).
             beta (`float`): per-allele change in success probability.
-            n_mean (`float`): mean trials per individual.
-            n_var (`float`): variance of trials per individual (>= 0).
-            r2 (`float`): LD / imputation-accuracy r² (0 < r2 <= 1).
+            n_mean (`float`): mean trials per individual :math:`\bar{n}`.
+            n_var (`float`): variance of trials per individual (:math:`\geq 0`).
+            r2 (`float`): LD / imputation-accuracy :math:`r^2`
+                (:math:`0 < r^2 \leq 1`).
         Returns:
             sd (`float`): standard deviation of the realised NCP.
 
@@ -532,17 +625,18 @@ class GwasBinomialTrait(Gwas):
     def binomial_trait_power(
         self, n=100, af=0.2, beta=0.05, n_mean=10.0, r2=1.0, alpha=5e-8
     ):
-        """Power to detect the association under the binomial trait model.
+        r"""Power to detect the association under the binomial trait model.
 
         Args:
             n (`int`): number of individuals.
-            af (`float`): allele frequency.
+            af (`float`): allele frequency (:math:`0 < \text{af} < 1`).
             beta (`float`): per-allele change in success probability.
-            n_mean (`float`): mean trials per individual.
-            r2 (`float`): LD / imputation-accuracy r² (0 < r2 <= 1).
+            n_mean (`float`): mean trials per individual :math:`\bar{n}`.
+            r2 (`float`): LD / imputation-accuracy :math:`r^2`
+                (:math:`0 < r^2 \leq 1`).
             alpha (`float`): p-value threshold.
         Returns:
-            power (`float`): power in [0, 1].
+            power (`float`): power in :math:`[0, 1]`.
 
         """
         ncp = self.ncp_binomial(n, af, beta, n_mean, r2)
@@ -559,19 +653,23 @@ class GwasBinomialTrait(Gwas):
         r2=1.0,
         alpha=5e-8,
     ):
-        """Power with ± n_sigma uncertainty bands from variable trial counts.
+        r"""Power with :math:`\pm` ``n_sigma`` uncertainty bands from variable trial counts.
 
         Args:
             n (`int`): number of individuals.
-            af (`float`): allele frequency.
+            af (`float`): allele frequency (:math:`0 < \text{af} < 1`).
             beta (`float`): per-allele change in success probability.
-            n_mean (`float`): mean trials per individual.
+            n_mean (`float`): mean trials per individual :math:`\bar{n}`.
             n_var (`float`): variance of trials per individual.
-            n_sigma (`float`): number of NCP standard deviations for bands.
-            r2 (`float`): LD / imputation-accuracy r² (0 < r2 <= 1).
+            n_sigma (`float`): number of NCP standard deviations for the bands.
+            r2 (`float`): LD / imputation-accuracy :math:`r^2`
+                (:math:`0 < r^2 \leq 1`).
             alpha (`float`): p-value threshold.
         Returns:
-            (power_low, power_mid, power_high) (`tuple[float, float, float]`).
+            (power_low, power_mid, power_high) (`tuple[float, float, float]`):
+                power at :math:`\lambda - \sigma_\lambda`,
+                :math:`\lambda`, and
+                :math:`\lambda + \sigma_\lambda`.
 
         """
         lam = self.ncp_binomial(n, af, beta, n_mean, r2)
@@ -585,17 +683,19 @@ class GwasBinomialTrait(Gwas):
     def binomial_trait_opt_n(
         self, af=0.2, beta=0.05, n_mean=10.0, power=0.8, r2=1.0, alpha=5e-8
     ):
-        """Minimum sample size to achieve target power.
+        r"""Minimum sample size to achieve the target power.
 
         Args:
-            af (`float`): allele frequency.
+            af (`float`): allele frequency (:math:`0 < \text{af} < 1`).
             beta (`float`): per-allele change in success probability.
-            n_mean (`float`): mean trials per individual.
-            power (`float`): target power level.
-            r2 (`float`): LD / imputation-accuracy r² (0 < r2 <= 1).
+            n_mean (`float`): mean trials per individual :math:`\bar{n}`.
+            power (`float`): target power level in :math:`(0, 1)`.
+            r2 (`float`): LD / imputation-accuracy :math:`r^2`
+                (:math:`0 < r^2 \leq 1`).
             alpha (`float`): p-value threshold.
         Returns:
-            opt_n (`float`): required N (fractional; take ceil in practice).
+            opt_n (`float`): required :math:`N` (fractional; take
+                :math:`\lceil \cdot \rceil` in practice).
 
         """
         assert 0.0 < power < 1.0
@@ -609,20 +709,29 @@ class GwasBinomialTrait(Gwas):
     def binomial_trait_beta_power(
         self, n=100, af=0.2, n_mean=10.0, power=0.8, r2=1.0, alpha=5e-8
     ):
-        """Minimum detectable |beta| at the target power level.
+        r"""Minimum detectable :math:`|\beta|` at the target power level.
 
-        beta is bounded above so that p_i = mu + beta*(g-2*af) stays in (0,1).
-        The hard cap is beta_max = (1 - mu) / 2, applied with a small margin.
+        :math:`\beta` is bounded above so that
+        :math:`p_i = \mu + \beta(g_i - 2\,\text{af})` stays in :math:`(0,1)`
+        for all genotypes.  The tightest constraint is:
+
+        .. math::
+
+            \beta_\max = \min\!\left(
+                \frac{1-\mu}{2(1-\text{af})},\;
+                \frac{\mu}{2\,\text{af}}
+            \right)
 
         Args:
             n (`int`): number of individuals.
-            af (`float`): allele frequency.
-            n_mean (`float`): mean trials per individual.
-            power (`float`): target power level.
-            r2 (`float`): LD / imputation-accuracy r² (0 < r2 <= 1).
+            af (`float`): allele frequency (:math:`0 < \text{af} < 1`).
+            n_mean (`float`): mean trials per individual :math:`\bar{n}`.
+            power (`float`): target power level in :math:`(0, 1)`.
+            r2 (`float`): LD / imputation-accuracy :math:`r^2`
+                (:math:`0 < r^2 \leq 1`).
             alpha (`float`): p-value threshold.
         Returns:
-            opt_beta (`float`): minimum detectable beta.
+            opt_beta (`float`): minimum detectable :math:`|\beta|`.
 
         """
         assert 0.0 < power < 1.0
@@ -642,17 +751,18 @@ class GwasBinomialTrait(Gwas):
     def power_curve(
         self, sample_sizes, af=0.2, beta=0.05, n_mean=10.0, r2=1.0, alpha=5e-8
     ):
-        """Power as a function of sample size.
+        r"""Power as a function of sample size (vectorised).
 
-        Vectorised: all NCPs are computed in one pass, then a single ncx2.cdf
-        call is made — no Python loop over sample sizes.
+        All NCPs are computed in one pass and a single :func:`ncx2.cdf` call
+        is made — no Python loop over sample sizes.
 
         Args:
-            sample_sizes (`array-like`): array of N values.
-            af (`float`): allele frequency.
+            sample_sizes (`array-like`): array of :math:`N` values.
+            af (`float`): allele frequency (:math:`0 < \text{af} < 1`).
             beta (`float`): per-allele change in success probability.
-            n_mean (`float`): mean trials per individual.
-            r2 (`float`): LD / imputation-accuracy r² (0 < r2 <= 1).
+            n_mean (`float`): mean trials per individual :math:`\bar{n}`.
+            r2 (`float`): LD / imputation-accuracy :math:`r^2`
+                (:math:`0 < r^2 \leq 1`).
             alpha (`float`): p-value threshold.
         Returns:
             powers (`np.ndarray`): power at each sample size.
