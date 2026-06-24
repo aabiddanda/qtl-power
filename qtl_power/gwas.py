@@ -778,37 +778,37 @@ class GwasBinomialTrait(Gwas):
 class GwasPoisson(Gwas):
     r"""GWAS power calculator for a Poisson count trait.
 
-    The outcome :math:`Y_i \\sim \\text{Poisson}(\\mu_i)` is linked to the
-    additive genotype :math:`g_i \\in \\{0, 1, 2\\}` (HWE) via:
+    The outcome :math:`Y_i \sim \text{Poisson}(\mu_i)` is linked to the
+    additive genotype :math:`g_i \in \{0, 1, 2\}` (HWE) via:
 
-    **Log link** (default, :math:`\\beta` is a log-rate-ratio per allele):
-
-    .. math::
-
-        \\log(\\mu_i) = \\log(\\mu) + \\beta\\,(g_i - 2\\,\\text{af})
-
-    **Identity link** (:math:`\\beta` is an absolute rate change per allele):
+    **Log link** (default, :math:`\beta` is a log-rate-ratio per allele):
 
     .. math::
 
-        \\mu_i = \\mu + \\beta\\,(g_i - 2\\,\\text{af})
+        \log(\mu_i) = \log(\mu) + \beta\,(g_i - 2\,\text{af})
 
-    :math:`\\mu` is the population mean count at the null.  The genotype is
-    mean-centred (:math:`g_i - 2\\,\\text{af}`) so the NCP is symmetric in af.
+    **Identity link** (:math:`\beta` is an absolute rate change per allele):
+
+    .. math::
+
+        \mu_i = \mu + \beta\,(g_i - 2\,\text{af})
+
+    :math:`\mu` is the population mean count at the null.  The genotype is
+    mean-centred (:math:`g_i - 2\,\text{af}`) so the NCP is symmetric in af.
 
     The score-test non-centrality parameter is:
 
     .. math::
 
-        \\lambda = r^2 \\, N \\, \\beta^2 \\cdot 2\\,\\text{af}(1-\\text{af}) \\cdot
-        \\begin{cases} \\mu & \\text{log link} \\\\ 1/\\mu & \\text{identity link} \\end{cases}
+        \lambda = r^2 \, N \, \beta^2 \cdot 2\,\text{af}(1-\text{af}) \cdot
+        \begin{cases} \mu & \text{log link} \\ 1/\mu & \text{identity link} \end{cases}
     """
 
     def __init__(self, mu=1.0, link="log"):
         r"""Initialise a Poisson GWAS power calculator.
 
         Args:
-            mu (`float`): population mean count at null (:math:`\\mu > 0`).
+            mu (`float`): population mean count at null (:math:`\mu > 0`).
             link (`str`): ``'log'`` (default) or ``'identity'``.
 
         """
@@ -826,7 +826,7 @@ class GwasPoisson(Gwas):
 
         .. math::
 
-            \\text{fold change} = e^{\\beta}
+            \text{fold change} = e^{\beta}
 
         Args:
             beta (`float`): log-rate-ratio per allele.
@@ -838,15 +838,15 @@ class GwasPoisson(Gwas):
 
     @staticmethod
     def beta_to_log_rr(beta, mu):
-        r"""Convert an identity-link :math:`\\beta` to an approximate log-rate-ratio.
+        r"""Convert an identity-link :math:`\beta` to an approximate log-rate-ratio.
 
         First-order delta method on the log transformation:
 
         .. math::
 
-            \\log\\text{RR} \\approx \\frac{\\beta}{\\mu}
+            \log\text{RR} \approx \frac{\beta}{\mu}
 
-        Accurate when :math:`\\beta \\ll \\mu`.
+        Accurate when :math:`\beta \ll \mu`.
 
         Args:
             beta (`float`): per-allele rate change (identity-link units).
@@ -859,13 +859,13 @@ class GwasPoisson(Gwas):
 
     @staticmethod
     def log_rr_to_beta(log_rr, mu):
-        r"""Convert a log-rate-ratio to an approximate identity-link :math:`\\beta`.
+        r"""Convert a log-rate-ratio to an approximate identity-link :math:`\beta`.
 
         Inverse of :meth:`beta_to_log_rr` (same small-effect approximation applies):
 
         .. math::
 
-            \\beta \\approx \\mu \\cdot \\log\\text{RR}
+            \beta \approx \mu \cdot \log\text{RR}
 
         Args:
             log_rr (`float`): log-rate-ratio per allele.
@@ -881,14 +881,14 @@ class GwasPoisson(Gwas):
 
         .. math::
 
-            \\lambda = r^2 \\, N \\, \\beta^2 \\cdot 2\\,\\text{af}(1-\\text{af}) \\cdot
-            \\begin{cases} \\mu & \\text{log link} \\\\ 1/\\mu & \\text{identity link} \\end{cases}
+            \lambda = r^2 \, N \, \beta^2 \cdot 2\,\text{af}(1-\text{af}) \cdot
+            \begin{cases} \mu & \text{log link} \\ 1/\mu & \text{identity link} \end{cases}
 
         Args:
             n (`int`): number of individuals.
-            af (`float`): allele frequency (:math:`0 < \\text{af} < 1`).
+            af (`float`): allele frequency (:math:`0 < \text{af} < 1`).
             beta (`float`): per-allele log-rate-ratio (log link) or rate change (identity link).
-            r2 (`float`): LD / imputation-accuracy :math:`r^2` (:math:`0 < r^2 \\leq 1`).
+            r2 (`float`): LD / imputation-accuracy :math:`r^2` (:math:`0 < r^2 \leq 1`).
         Returns:
             ncp (`float`): non-centrality parameter.
 
@@ -909,7 +909,7 @@ class GwasPoisson(Gwas):
             n (`int`): number of individuals.
             af (`float`): allele frequency.
             beta (`float`): per-allele log-rate-ratio (log link) or rate change (identity link).
-            r2 (`float`): LD / imputation-accuracy :math:`r^2` (:math:`0 < r^2 \\leq 1`).
+            r2 (`float`): LD / imputation-accuracy :math:`r^2` (:math:`0 < r^2 \leq 1`).
             alpha (`float`): p-value threshold.
         Returns:
             power (`float`): power in :math:`[0, 1]`.
@@ -925,10 +925,10 @@ class GwasPoisson(Gwas):
             af (`float`): allele frequency.
             beta (`float`): per-allele log-rate-ratio (log link) or rate change (identity link).
             power (`float`): target power level.
-            r2 (`float`): LD / imputation-accuracy :math:`r^2` (:math:`0 < r^2 \\leq 1`).
+            r2 (`float`): LD / imputation-accuracy :math:`r^2` (:math:`0 < r^2 \leq 1`).
             alpha (`float`): p-value threshold.
         Returns:
-            opt_n (`float`): required :math:`N` (fractional; take :math:`\\lceil \\cdot \\rceil` in practice).
+            opt_n (`float`): required :math:`N` (fractional; take :math:`\lceil \cdot \rceil` in practice).
 
         """
         assert 0.0 < power < 1.0
@@ -940,23 +940,23 @@ class GwasPoisson(Gwas):
         return opt_n
 
     def poisson_trait_beta_power(self, n=100, af=0.2, power=0.8, r2=1.0, alpha=5e-8):
-        r"""Minimum detectable :math:`|\\beta|` at the target power level.
+        r"""Minimum detectable :math:`|\beta|` at the target power level.
 
         The solver bracket upper bound is:
 
-        - **Log link**: :math:`\\log(100)` (no analytical bound; cap avoids blowup).
-        - **Identity link**: :math:`\\mu / (2\\,\\text{af})`, the tightest constraint
+        - **Log link**: :math:`\log(100)` (no analytical bound; cap avoids blowup).
+        - **Identity link**: :math:`\mu / (2\,\text{af})`, the tightest constraint
           keeping all Poisson means positive
-          (:math:`\\mu_i = \\mu + \\beta(g_i - 2\\,\\text{af}) > 0` at :math:`g_i = 0`).
+          (:math:`\mu_i = \mu + \beta(g_i - 2\,\text{af}) > 0` at :math:`g_i = 0`).
 
         Args:
             n (`int`): number of individuals.
             af (`float`): allele frequency.
             power (`float`): target power level.
-            r2 (`float`): LD / imputation-accuracy :math:`r^2` (:math:`0 < r^2 \\leq 1`).
+            r2 (`float`): LD / imputation-accuracy :math:`r^2` (:math:`0 < r^2 \leq 1`).
             alpha (`float`): p-value threshold.
         Returns:
-            opt_beta (`float`): minimum detectable :math:`\\beta`.
+            opt_beta (`float`): minimum detectable :math:`\beta`.
 
         """
         assert 0.0 < power < 1.0
@@ -982,7 +982,7 @@ class GwasPoisson(Gwas):
             sample_sizes (`array-like`): array of :math:`N` values.
             af (`float`): allele frequency.
             beta (`float`): per-allele log-rate-ratio (log link) or rate change (identity link).
-            r2 (`float`): LD / imputation-accuracy :math:`r^2` (:math:`0 < r^2 \\leq 1`).
+            r2 (`float`): LD / imputation-accuracy :math:`r^2` (:math:`0 < r^2 \leq 1`).
             alpha (`float`): p-value threshold.
         Returns:
             powers (`np.ndarray`): power at each sample size.
