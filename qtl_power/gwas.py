@@ -95,7 +95,9 @@ class GwasQuant(Gwas):
         vg = self.genotype_var(af, var_g)
         return r2 * n * vg * (beta**2)
 
-    def quant_trait_power(self, n=100, af=0.1, beta=0.1, r2=1.0, alpha=5e-8, var_g=None):
+    def quant_trait_power(
+        self, n=100, af=0.1, beta=0.1, r2=1.0, alpha=5e-8, var_g=None
+    ):
         r"""Power for a quantitative trait association study.
 
         Args:
@@ -114,7 +116,9 @@ class GwasQuant(Gwas):
         ncp = self.ncp_quant(n, af, beta, r2, var_g=var_g)
         return self.llr_power(alpha, df=1, ncp=ncp)
 
-    def quant_trait_beta_power(self, n=100, power=0.90, af=0.1, r2=1.0, alpha=5e-8, var_g=None):
+    def quant_trait_beta_power(
+        self, n=100, power=0.90, af=0.1, r2=1.0, alpha=5e-8, var_g=None
+    ):
         r"""Minimum detectable effect size at the target power level.
 
         Args:
@@ -143,7 +147,9 @@ class GwasQuant(Gwas):
             opt_beta = np.nan
         return opt_beta
 
-    def quant_trait_opt_n(self, beta=0.1, power=0.90, af=0.1, r2=1.0, alpha=5e-8, var_g=None):
+    def quant_trait_opt_n(
+        self, beta=0.1, power=0.90, af=0.1, r2=1.0, alpha=5e-8, var_g=None
+    ):
         r"""Minimum sample size to achieve the target power.
 
         Args:
@@ -163,7 +169,9 @@ class GwasQuant(Gwas):
         """
         assert (power >= 0) & (power <= 1)
         f = (
-            lambda n: self.quant_trait_power(n=n, af=af, r2=r2, beta=beta, alpha=alpha, var_g=var_g)
+            lambda n: self.quant_trait_power(
+                n=n, af=af, r2=r2, beta=beta, alpha=alpha, var_g=var_g
+            )
             - power
         )
         try:
@@ -275,7 +283,13 @@ class GwasBinary(Gwas):
         assert (power > 0) & (power < 1)
         f = (
             lambda beta: self.binary_trait_power(
-                n=n, af=af, r2=r2, beta=beta, alpha=alpha, prop_cases=prop_cases, var_g=var_g
+                n=n,
+                af=af,
+                r2=r2,
+                beta=beta,
+                alpha=alpha,
+                prop_cases=prop_cases,
+                var_g=var_g,
             )
             - power
         )
@@ -286,7 +300,14 @@ class GwasBinary(Gwas):
         return opt_beta
 
     def binary_trait_opt_n(
-        self, beta=0.1, power=0.90, af=0.1, r2=1.0, alpha=5e-8, prop_cases=0.5, var_g=None
+        self,
+        beta=0.1,
+        power=0.90,
+        af=0.1,
+        r2=1.0,
+        alpha=5e-8,
+        prop_cases=0.5,
+        var_g=None,
     ):
         r"""Minimum sample size to achieve the target power.
 
@@ -309,7 +330,13 @@ class GwasBinary(Gwas):
         assert (power >= 0) & (power <= 1)
         f = (
             lambda n: self.binary_trait_power(
-                n=n, af=af, r2=r2, beta=beta, alpha=alpha, prop_cases=prop_cases, var_g=var_g
+                n=n,
+                af=af,
+                r2=r2,
+                beta=beta,
+                alpha=alpha,
+                prop_cases=prop_cases,
+                var_g=var_g,
             )
             - power
         )
@@ -631,8 +658,10 @@ class GwasBinomialTrait(Gwas):
         vg = self.genotype_var(af, var_g)
         return r2 * n * beta**2 * vg * n_mean / (self.mu * (1.0 - self.mu))
 
-    def ncp_binomial_sd(self, n=100, af=0.2, beta=0.05, n_mean=10.0, n_var=0.0, r2=1.0, var_g=None):
-        r"""Standard deviation of the realised NCP due to variable trial counts.
+    def ncp_binomial_sd(
+        self, n=100, af=0.2, beta=0.05, n_mean=10.0, n_var=0.0, r2=1.0, var_g=None
+    ):
+        r"""Compute the standard deviation of the NCP due to variable trials.
 
         By the delta method:
 
@@ -772,7 +801,12 @@ class GwasBinomialTrait(Gwas):
 
         """
         assert 0.0 < power < 1.0
-        f = lambda n: self.binomial_trait_power(n, af, beta, n_mean, r2, alpha, var_g=var_g) - power
+        f = (
+            lambda n: self.binomial_trait_power(
+                n, af, beta, n_mean, r2, alpha, var_g=var_g
+            )
+            - power
+        )
         try:
             opt_n = root_scalar(f, bracket=(1.0, 1e10)).root
         except (OverflowError, ValueError):
@@ -826,7 +860,12 @@ class GwasBinomialTrait(Gwas):
         else:
             # Copy-number range unknown; bound by population-mean constraint only.
             beta_max = min(self.mu, 1.0 - self.mu) * 0.9999
-        f = lambda b: self.binomial_trait_power(n, af, b, n_mean, r2, alpha, var_g=var_g) - power
+        f = (
+            lambda b: self.binomial_trait_power(
+                n, af, b, n_mean, r2, alpha, var_g=var_g
+            )
+            - power
+        )
         try:
             opt_beta = root_scalar(f, bracket=(1e-9, beta_max)).root
         except (OverflowError, ValueError):
@@ -834,7 +873,14 @@ class GwasBinomialTrait(Gwas):
         return opt_beta
 
     def power_curve(
-        self, sample_sizes, af=0.2, beta=0.05, n_mean=10.0, r2=1.0, alpha=5e-8, var_g=None
+        self,
+        sample_sizes,
+        af=0.2,
+        beta=0.05,
+        n_mean=10.0,
+        r2=1.0,
+        alpha=5e-8,
+        var_g=None,
     ):
         r"""Power as a function of sample size (vectorised).
 
@@ -1000,7 +1046,9 @@ class GwasPoisson(Gwas):
         else:
             return r2 * n * beta**2 * vg / self.mu
 
-    def poisson_trait_power(self, n=100, af=0.2, beta=0.1, r2=1.0, alpha=5e-8, var_g=None):
+    def poisson_trait_power(
+        self, n=100, af=0.2, beta=0.1, r2=1.0, alpha=5e-8, var_g=None
+    ):
         r"""Power to detect association under the Poisson trait model.
 
         Args:
@@ -1019,7 +1067,9 @@ class GwasPoisson(Gwas):
         ncp = self.ncp_poisson(n, af, beta, r2, var_g=var_g)
         return self.llr_power(alpha=alpha, df=1, ncp=ncp)
 
-    def poisson_trait_opt_n(self, af=0.2, beta=0.1, power=0.8, r2=1.0, alpha=5e-8, var_g=None):
+    def poisson_trait_opt_n(
+        self, af=0.2, beta=0.1, power=0.8, r2=1.0, alpha=5e-8, var_g=None
+    ):
         r"""Minimum sample size to achieve target power.
 
         Args:
@@ -1036,14 +1086,19 @@ class GwasPoisson(Gwas):
 
         """
         assert 0.0 < power < 1.0
-        f = lambda n: self.poisson_trait_power(n, af, beta, r2, alpha, var_g=var_g) - power
+        f = (
+            lambda n: self.poisson_trait_power(n, af, beta, r2, alpha, var_g=var_g)
+            - power
+        )
         try:
             opt_n = root_scalar(f, bracket=(1.0, 1e10)).root
         except (OverflowError, ValueError):
             opt_n = np.nan
         return opt_n
 
-    def poisson_trait_beta_power(self, n=100, af=0.2, power=0.8, r2=1.0, alpha=5e-8, var_g=None):
+    def poisson_trait_beta_power(
+        self, n=100, af=0.2, power=0.8, r2=1.0, alpha=5e-8, var_g=None
+    ):
         r"""Minimum detectable :math:`|\beta|` at the target power level.
 
         The solver bracket upper bound is:
@@ -1084,7 +1139,9 @@ class GwasPoisson(Gwas):
             opt_beta = np.nan
         return opt_beta
 
-    def power_curve(self, sample_sizes, af=0.2, beta=0.1, r2=1.0, alpha=5e-8, var_g=None):
+    def power_curve(
+        self, sample_sizes, af=0.2, beta=0.1, r2=1.0, alpha=5e-8, var_g=None
+    ):
         r"""Power as a function of sample size (vectorised).
 
         All NCPs are computed in one pass and a single :func:`ncx2.cdf` call is

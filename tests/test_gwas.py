@@ -797,7 +797,9 @@ def test_ncp_binary_var_g_matches_af():
     obj = GwasBinary()
     af = 0.2
     ncp_af = obj.ncp_binary(n=500, af=af, beta=0.5, r2=1.0, prop_cases=0.4)
-    ncp_vg = obj.ncp_binary(n=500, af=0.99, beta=0.5, r2=1.0, prop_cases=0.4, var_g=2 * af * (1 - af))
+    ncp_vg = obj.ncp_binary(
+        n=500, af=0.99, beta=0.5, r2=1.0, prop_cases=0.4, var_g=2 * af * (1 - af)
+    )
     assert abs(ncp_af - ncp_vg) < 1e-10
 
 
@@ -806,7 +808,9 @@ def test_ncp_binomial_var_g_matches_af():
     obj = GwasBinomialTrait(mu=0.3)
     af = 0.25
     ncp_af = obj.ncp_binomial(n=2000, af=af, beta=0.05, n_mean=10)
-    ncp_vg = obj.ncp_binomial(n=2000, af=0.99, beta=0.05, n_mean=10, var_g=2 * af * (1 - af))
+    ncp_vg = obj.ncp_binomial(
+        n=2000, af=0.99, beta=0.05, n_mean=10, var_g=2 * af * (1 - af)
+    )
     assert abs(ncp_af - ncp_vg) < 1e-10
 
 
@@ -830,7 +834,10 @@ def test_ncp_binomial_sd_raises_with_var_g_and_nvar():
 def test_ncp_binomial_sd_zero_var_g_fixed_n():
     """ncp_binomial_sd returns 0 when n_var=0 even with var_g set."""
     obj = GwasBinomialTrait(mu=0.3)
-    assert obj.ncp_binomial_sd(n=1000, af=0.2, beta=0.05, n_mean=10, n_var=0.0, var_g=0.18) == 0.0
+    assert (
+        obj.ncp_binomial_sd(n=1000, af=0.2, beta=0.05, n_mean=10, n_var=0.0, var_g=0.18)
+        == 0.0
+    )
 
 
 def test_binomial_power_curve_var_g_matches_scalar():
@@ -839,7 +846,12 @@ def test_binomial_power_curve_var_g_matches_scalar():
     vg = 0.18
     ns = np.array([500, 1000, 5000])
     curve = obj.power_curve(ns, beta=0.05, n_mean=10, alpha=0.05, var_g=vg)
-    scalar = np.array([obj.binomial_trait_power(n, beta=0.05, n_mean=10, alpha=0.05, var_g=vg) for n in ns])
+    scalar = np.array(
+        [
+            obj.binomial_trait_power(n, beta=0.05, n_mean=10, alpha=0.05, var_g=vg)
+            for n in ns
+        ]
+    )
     np.testing.assert_allclose(curve, scalar, rtol=1e-10)
 
 
@@ -850,7 +862,9 @@ def test_poisson_power_curve_var_g_matches_scalar():
         vg = 0.18
         ns = np.array([500, 1000, 5000])
         curve = obj.power_curve(ns, beta=0.1, alpha=0.05, var_g=vg)
-        scalar = np.array([obj.poisson_trait_power(n, beta=0.1, alpha=0.05, var_g=vg) for n in ns])
+        scalar = np.array(
+            [obj.poisson_trait_power(n, beta=0.1, alpha=0.05, var_g=vg) for n in ns]
+        )
         np.testing.assert_allclose(curve, scalar, rtol=1e-10, err_msg=f"link={link}")
 
 
@@ -858,9 +872,13 @@ def test_binomial_beta_power_self_consistent_var_g():
     """binomial_trait_beta_power solver round-trip works when var_g is set."""
     obj = GwasBinomialTrait(mu=0.3)
     vg = 0.18
-    opt_beta = obj.binomial_trait_beta_power(n=5000, n_mean=10, power=0.8, alpha=0.05, var_g=vg)
+    opt_beta = obj.binomial_trait_beta_power(
+        n=5000, n_mean=10, power=0.8, alpha=0.05, var_g=vg
+    )
     if not np.isnan(opt_beta):
-        recovered = obj.binomial_trait_power(n=5000, beta=opt_beta, n_mean=10, alpha=0.05, var_g=vg)
+        recovered = obj.binomial_trait_power(
+            n=5000, beta=opt_beta, n_mean=10, alpha=0.05, var_g=vg
+        )
         assert abs(recovered - 0.8) < 1e-4
 
 
@@ -871,7 +889,9 @@ def test_poisson_beta_power_self_consistent_var_g():
         vg = 0.18
         opt_beta = obj.poisson_trait_beta_power(n=5000, power=0.8, alpha=0.05, var_g=vg)
         if not np.isnan(opt_beta):
-            recovered = obj.poisson_trait_power(n=5000, beta=opt_beta, alpha=0.05, var_g=vg)
+            recovered = obj.poisson_trait_power(
+                n=5000, beta=opt_beta, alpha=0.05, var_g=vg
+            )
             assert abs(recovered - 0.8) < 1e-4, f"link={link}"
 
 

@@ -19,7 +19,7 @@ authors = [{name = "Arjun Biddanda", email = "aabiddanda@gmail.com"}]
 readme = "README.md"
 
 [project.optional-dependencies]
-tests = [ "pytest", "pytest-cov", "hypothesis", "flake8", "sphinx"]
+tests = [ "pytest", "pytest-cov", "pytest-xdist", "hypothesis"]
 
 [tool.setuptools]
 zip-safe = false
