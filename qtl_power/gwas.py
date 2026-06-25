@@ -11,6 +11,13 @@ class Gwas:
         """Initialize base class."""
         pass
 
+    @staticmethod
+    def genotype_var(af, var_g):
+        """Return genotype variance: var_g if provided, else 2*af*(1-af)."""
+        if var_g is not None:
+            return var_g
+        return 2.0 * af * (1.0 - af)
+
     def llr_power(self, alpha=5e-8, df=1, ncp=1):
         r"""Power under a non-central chi-squared distribution.
 
@@ -49,60 +56,76 @@ class GwasQuant(Gwas):
 
     where :math:`r^2` is the LD / imputation-accuracy squared correlation
     between the causal variant and the typed tag.
+
+    For CNV predictors pass ``var_g`` = :math:`\text{Var}(C)` to replace
+    :math:`2\,\text{af}(1-\text{af})` with the copy-number variance.
     """
 
     def __init__(self):
         """Initialize a GWAS power calculator for quantitative traits."""
         super(GwasQuant, self).__init__()
 
-    def ncp_quant(self, n=100, af=0.1, beta=0.1, r2=1.0):
+    def ncp_quant(self, n=100, af=0.1, beta=0.1, r2=1.0, var_g=None):
         r"""Non-centrality parameter for a quantitative trait GWAS.
 
         .. math::
 
-            \lambda = r^2 \, N \, \beta^2 \cdot 2\,\text{af}(1 - \text{af})
+            \lambda = r^2 \, N \, \beta^2 \cdot V_g
+
+        where :math:`V_g = 2\,\text{af}(1-\text{af})` for SNPs or
+        :math:`V_g = \text{Var}(C)` when ``var_g`` is supplied.
 
         Args:
             n (`int`): sample-size of unrelated individuals.
             af (`float`): allele frequency of variant (:math:`0 < \text{af} < 1`).
+                Ignored when ``var_g`` is provided.
             beta (`float`): per-allele effect size in phenotypic-SD units.
             r2 (`float`): LD :math:`r^2` between causal and tagged variant
                 (:math:`0 < r^2 \leq 1`).
+            var_g (`float`, optional): genotype / copy-number variance to use in
+                place of :math:`2\,\text{af}(1-\text{af})`.
         Returns:
             ncp (`float`): non-centrality parameter :math:`\lambda`.
 
         """
         assert n > 0
-        assert (af > 0.0) and (af < 1.0)
         assert (r2 > 0) & (r2 <= 1.0)
-        ncp = r2 * n * 2 * af * (1.0 - af) * (beta**2)
-        return ncp
+        if var_g is None:
+            assert (af > 0.0) and (af < 1.0)
+        vg = self.genotype_var(af, var_g)
+        return r2 * n * vg * (beta**2)
 
-    def quant_trait_power(self, n=100, af=0.1, beta=0.1, r2=1.0, alpha=5e-8):
+    def quant_trait_power(self, n=100, af=0.1, beta=0.1, r2=1.0, alpha=5e-8, var_g=None):
         r"""Power for a quantitative trait association study.
 
         Args:
             n (`int`): sample-size of unrelated individuals.
             af (`float`): allele frequency of variant (:math:`0 < \text{af} < 1`).
+                Ignored when ``var_g`` is provided.
             beta (`float`): per-allele effect size in phenotypic-SD units.
             r2 (`float`): LD :math:`r^2` (:math:`0 < r^2 \leq 1`).
             alpha (`float`): p-value threshold for GWAS.
+            var_g (`float`, optional): genotype / copy-number variance to use in
+                place of :math:`2\,\text{af}(1-\text{af})`.
         Returns:
             power (`float`): power in :math:`[0, 1]`.
 
         """
-        ncp = self.ncp_quant(n, af, beta, r2)
+        ncp = self.ncp_quant(n, af, beta, r2, var_g=var_g)
         return self.llr_power(alpha, df=1, ncp=ncp)
 
-    def quant_trait_beta_power(self, n=100, power=0.90, af=0.1, r2=1.0, alpha=5e-8):
+    def quant_trait_beta_power(self, n=100, power=0.90, af=0.1, r2=1.0, alpha=5e-8, var_g=None):
         r"""Minimum detectable effect size at the target power level.
 
         Args:
             n (`int`): sample-size of unrelated individuals.
             power (`float`): target power level in :math:`(0, 1)`.
             af (`float`): allele frequency of variant (:math:`0 < \text{af} < 1`).
+                Ignored when ``var_g`` is provided.
             r2 (`float`): LD :math:`r^2` (:math:`0 < r^2 \leq 1`).
             alpha (`float`): p-value threshold for GWAS.
+            var_g (`float`, optional): genotype / copy-number variance to use in
+                place of :math:`2\,\text{af}(1-\text{af})`.
         Returns:
             opt_beta (`float`): minimum detectable :math:`|\beta|`.
 
@@ -110,7 +133,7 @@ class GwasQuant(Gwas):
         assert (power >= 0) & (power <= 1)
         f = (
             lambda beta: self.quant_trait_power(
-                n=n, af=af, r2=r2, beta=beta, alpha=alpha
+                n=n, af=af, r2=r2, beta=beta, alpha=alpha, var_g=var_g
             )
             - power
         )
@@ -120,15 +143,18 @@ class GwasQuant(Gwas):
             opt_beta = np.nan
         return opt_beta
 
-    def quant_trait_opt_n(self, beta=0.1, power=0.90, af=0.1, r2=1.0, alpha=5e-8):
+    def quant_trait_opt_n(self, beta=0.1, power=0.90, af=0.1, r2=1.0, alpha=5e-8, var_g=None):
         r"""Minimum sample size to achieve the target power.
 
         Args:
             beta (`float`): per-allele effect size in phenotypic-SD units.
             power (`float`): target power level in :math:`(0, 1)`.
             af (`float`): allele frequency of variant (:math:`0 < \text{af} < 1`).
+                Ignored when ``var_g`` is provided.
             r2 (`float`): LD :math:`r^2` (:math:`0 < r^2 \leq 1`).
             alpha (`float`): p-value threshold for GWAS.
+            var_g (`float`, optional): genotype / copy-number variance to use in
+                place of :math:`2\,\text{af}(1-\text{af})`.
 
         Returns:
             opt_n (`float`): required :math:`N` (fractional; take
@@ -137,7 +163,7 @@ class GwasQuant(Gwas):
         """
         assert (power >= 0) & (power <= 1)
         f = (
-            lambda n: self.quant_trait_power(n=n, af=af, r2=r2, beta=beta, alpha=alpha)
+            lambda n: self.quant_trait_power(n=n, af=af, r2=r2, beta=beta, alpha=alpha, var_g=var_g)
             - power
         )
         try:
@@ -159,63 +185,71 @@ class GwasBinary(Gwas):
     where :math:`K` is the proportion of cases, :math:`\beta` is the
     per-allele log-OR (small-effect linear approximation), and :math:`r^2` is
     the LD / imputation-accuracy squared correlation.
+
+    For CNV predictors pass ``var_g`` = :math:`\text{Var}(C)` to replace
+    :math:`2\,\text{af}(1-\text{af})` with the copy-number variance.
     """
 
     def __init__(self):
         """Initialize a GWAS power calculator for case/control traits."""
         super(GwasBinary, self).__init__()
 
-    def ncp_binary(self, n=100, af=0.1, beta=0.1, r2=1.0, prop_cases=0.1):
+    def ncp_binary(self, n=100, af=0.1, beta=0.1, r2=1.0, prop_cases=0.1, var_g=None):
         r"""Non-centrality parameter for a case/control GWAS.
 
         .. math::
 
-            \lambda = r^2 \, N \, \beta^2 \cdot 2\,\text{af}(1-\text{af})
-                      \cdot K(1-K)
+            \lambda = r^2 \, N \, \beta^2 \cdot V_g \cdot K(1-K)
 
-        where :math:`K` = ``prop_cases``.
+        where :math:`K` = ``prop_cases`` and :math:`V_g = 2\,\text{af}(1-\text{af})`
+        for SNPs or :math:`V_g = \text{Var}(C)` when ``var_g`` is supplied.
 
         Args:
             n (`int`): sample-size of unrelated individuals.
             af (`float`): allele frequency (:math:`0 \leq \text{af} \leq 1`).
+                Ignored when ``var_g`` is provided.
             beta (`float`): per-allele effect size (linear approximation to log-OR).
             r2 (`float`): LD :math:`r^2` (:math:`0 \leq r^2 \leq 1`).
             prop_cases (`float`): proportion of samples that are cases
                 (:math:`0 < K < 1`).
+            var_g (`float`, optional): genotype / copy-number variance to use in
+                place of :math:`2\,\text{af}(1-\text{af})`.
         Returns:
             ncp (`float`): non-centrality parameter :math:`\lambda`.
 
         """
         assert n > 0
-        assert (af >= 0.0) and (af <= 1.0)
         assert (r2 >= 0) & (r2 <= 1.0)
         assert (prop_cases > 0) & (prop_cases < 1.0)
-        ncp = (
-            r2 * n * 2 * af * (1.0 - af) * prop_cases * (1.0 - prop_cases) * (beta**2)
-        )
-        return ncp
+        if var_g is None:
+            assert (af >= 0.0) and (af <= 1.0)
+        vg = self.genotype_var(af, var_g)
+        return r2 * n * vg * prop_cases * (1.0 - prop_cases) * (beta**2)
 
     def binary_trait_power(
-        self, n=100, af=0.1, beta=0.1, r2=1.0, alpha=5e-8, prop_cases=0.1
+        self, n=100, af=0.1, beta=0.1, r2=1.0, alpha=5e-8, prop_cases=0.1, var_g=None
     ):
         r"""Power under a case-control GWAS study design.
 
         Args:
             n (`int`): sample-size of unrelated individuals.
             af (`float`): allele frequency (:math:`0 < \text{af} < 1`).
+                Ignored when ``var_g`` is provided.
             beta (`float`): per-allele effect size.
             r2 (`float`): LD :math:`r^2` (:math:`0 \leq r^2 \leq 1`).
             alpha (`float`): p-value threshold for detection.
             prop_cases (`float`): proportion of samples that are cases.
+            var_g (`float`, optional): genotype / copy-number variance to use in
+                place of :math:`2\,\text{af}(1-\text{af})`.
         Returns:
             power (`float`): power in :math:`[0, 1]`.
 
         """
-        ncp = self.ncp_binary(n, af, beta, r2, prop_cases)
+        ncp = self.ncp_binary(n, af, beta, r2, prop_cases, var_g=var_g)
         return self.llr_power(alpha, df=1, ncp=ncp)
 
     def binary_trait_beta_power(
-        self, n=100, power=0.90, af=0.1, r2=1.0, alpha=5e-8, prop_cases=0.5
+        self, n=100, power=0.90, af=0.1, r2=1.0, alpha=5e-8, prop_cases=0.5, var_g=None
     ):
         r"""Minimum detectable effect size under a case-control GWAS study design.
 
@@ -223,21 +257,25 @@ class GwasBinary(Gwas):
             n (`int`): sample-size of unrelated individuals.
             power (`float`): target power level in :math:`(0, 1)`.
             af (`float`): allele frequency (:math:`0 < \text{af} < 1`).
+                Ignored when ``var_g`` is provided.
             r2 (`float`): LD :math:`r^2` (:math:`0 \leq r^2 \leq 1`).
             alpha (`float`): p-value threshold for detection.
             prop_cases (`float`): proportion of samples that are cases.
+            var_g (`float`, optional): genotype / copy-number variance to use in
+                place of :math:`2\,\text{af}(1-\text{af})`.
 
         Returns:
             opt_beta (`float`): minimum detectable :math:`|\beta|`.
 
         """
         assert n > 0
-        assert (af > 0) & (af < 1)
+        if var_g is None:
+            assert (af > 0) & (af < 1)
         assert (r2 >= 0.0) & (r2 <= 1.0)
         assert (power > 0) & (power < 1)
         f = (
             lambda beta: self.binary_trait_power(
-                n=n, af=af, r2=r2, beta=beta, alpha=alpha, prop_cases=prop_cases
+                n=n, af=af, r2=r2, beta=beta, alpha=alpha, prop_cases=prop_cases, var_g=var_g
             )
             - power
         )
@@ -248,7 +286,7 @@ class GwasBinary(Gwas):
         return opt_beta
 
     def binary_trait_opt_n(
-        self, beta=0.1, power=0.90, af=0.1, r2=1.0, alpha=5e-8, prop_cases=0.5
+        self, beta=0.1, power=0.90, af=0.1, r2=1.0, alpha=5e-8, prop_cases=0.5, var_g=None
     ):
         r"""Minimum sample size to achieve the target power.
 
@@ -256,9 +294,12 @@ class GwasBinary(Gwas):
             beta (`float`): per-allele effect size.
             power (`float`): target power level in :math:`(0, 1)`.
             af (`float`): allele frequency (:math:`0 < \text{af} < 1`).
+                Ignored when ``var_g`` is provided.
             r2 (`float`): LD :math:`r^2` (:math:`0 \leq r^2 \leq 1`).
             alpha (`float`): p-value threshold for GWAS.
             prop_cases (`float`): proportion of cases in the dataset.
+            var_g (`float`, optional): genotype / copy-number variance to use in
+                place of :math:`2\,\text{af}(1-\text{af})`.
 
         Returns:
             opt_n (`float`): required :math:`N` (fractional; take
@@ -268,7 +309,7 @@ class GwasBinary(Gwas):
         assert (power >= 0) & (power <= 1)
         f = (
             lambda n: self.binary_trait_power(
-                n=n, af=af, r2=r2, beta=beta, alpha=alpha, prop_cases=prop_cases
+                n=n, af=af, r2=r2, beta=beta, alpha=alpha, prop_cases=prop_cases, var_g=var_g
             )
             - power
         )
@@ -434,6 +475,9 @@ class GwasBinomialTrait(Gwas):
     :math:`r^2` is the LD / imputation-accuracy squared correlation between the
     causal variant and the typed/imputed tag (:math:`r^2 = 1` gives the
     perfectly-typed case).
+
+    For CNV predictors pass ``var_g`` = :math:`\text{Var}(C)` to replace
+    :math:`2\,\text{af}(1-\text{af})` with the copy-number variance.
     """
 
     def __init__(self, mu=0.5):
@@ -553,34 +597,41 @@ class GwasBinomialTrait(Gwas):
         """
         return log_or * mu * (1.0 - mu)
 
-    def ncp_binomial(self, n=100, af=0.2, beta=0.05, n_mean=10.0, r2=1.0):
+    def ncp_binomial(self, n=100, af=0.2, beta=0.05, n_mean=10.0, r2=1.0, var_g=None):
         r"""Non-centrality parameter for the binomial-trait score test.
 
         .. math::
 
-            \lambda = r^2 \, N \, \beta^2 \cdot 2\,\text{af}(1-\text{af}) \cdot
+            \lambda = r^2 \, N \, \beta^2 \cdot V_g \cdot
                       \frac{\bar{n}}{\mu(1-\mu)}
+
+        where :math:`V_g = 2\,\text{af}(1-\text{af})` for SNPs or
+        :math:`V_g = \text{Var}(C)` when ``var_g`` is supplied.
 
         Args:
             n (`int`): number of individuals.
             af (`float`): allele frequency (:math:`0 < \text{af} < 1`).
+                Ignored when ``var_g`` is provided.
             beta (`float`): per-allele change in success probability.
             n_mean (`float`): mean number of Binomial trials per individual
                 :math:`\bar{n}`.
             r2 (`float`): LD / imputation-accuracy :math:`r^2` between causal
                 and typed variant (:math:`0 < r^2 \leq 1`).
+            var_g (`float`, optional): genotype / copy-number variance to use in
+                place of :math:`2\,\text{af}(1-\text{af})`.
         Returns:
             ncp (`float`): non-centrality parameter :math:`\lambda`.
 
         """
         assert n > 0
-        assert 0.0 < af < 1.0
         assert n_mean > 0
         assert 0.0 < r2 <= 1.0
-        var_g = 2.0 * af * (1.0 - af)
-        return r2 * n * beta**2 * var_g * n_mean / (self.mu * (1.0 - self.mu))
+        if var_g is None:
+            assert 0.0 < af < 1.0
+        vg = self.genotype_var(af, var_g)
+        return r2 * n * beta**2 * vg * n_mean / (self.mu * (1.0 - self.mu))
 
-    def ncp_binomial_sd(self, n=100, af=0.2, beta=0.05, n_mean=10.0, n_var=0.0, r2=1.0):
+    def ncp_binomial_sd(self, n=100, af=0.2, beta=0.05, n_mean=10.0, n_var=0.0, r2=1.0, var_g=None):
         r"""Standard deviation of the realised NCP due to variable trial counts.
 
         By the delta method:
@@ -594,6 +645,10 @@ class GwasBinomialTrait(Gwas):
         where :math:`\tilde{g} = g - 2\,\text{af}`.  Returns 0.0 when
         ``n_var`` = 0 (fixed-trial design).
 
+        The higher-moment calculation requires the full :math:`\{0,1,2\}`
+        genotype distribution and is therefore not supported when ``var_g``
+        is supplied and ``n_var`` > 0.
+
         Args:
             n (`int`): number of individuals.
             af (`float`): allele frequency (:math:`0 < \text{af} < 1`).
@@ -602,6 +657,9 @@ class GwasBinomialTrait(Gwas):
             n_var (`float`): variance of trials per individual (:math:`\geq 0`).
             r2 (`float`): LD / imputation-accuracy :math:`r^2`
                 (:math:`0 < r^2 \leq 1`).
+            var_g (`float`, optional): genotype / copy-number variance.  Supported
+                only when ``n_var`` = 0 (fixed-trial design); raises
+                ``NotImplementedError`` otherwise.
         Returns:
             sd (`float`): standard deviation of the realised NCP.
 
@@ -609,8 +667,13 @@ class GwasBinomialTrait(Gwas):
         assert n_var >= 0.0
         if n_var == 0.0:
             return 0.0
+        if var_g is not None:
+            raise NotImplementedError(
+                "ncp_binomial_sd with variable trial counts requires the full "
+                "genotype distribution (etg4); supply var_g only when n_var=0."
+            )
         lam = self.ncp_binomial(n, af, beta, n_mean, r2)
-        var_g = 2.0 * af * (1.0 - af)
+        vg = 2.0 * af * (1.0 - af)
         # E[(g - 2*af)^4] under HWE
         etg4 = (
             (-2 * af) ** 4 * (1 - af) ** 2
@@ -618,28 +681,31 @@ class GwasBinomialTrait(Gwas):
             + (2 * (1 - af)) ** 4 * af**2
         )
         en2 = n_var + n_mean**2
-        var_tg2n = etg4 * en2 - (var_g * n_mean) ** 2
-        cv2_denom = var_tg2n / ((var_g * n_mean) ** 2 * n)
+        var_tg2n = etg4 * en2 - (vg * n_mean) ** 2
+        cv2_denom = var_tg2n / ((vg * n_mean) ** 2 * n)
         return np.sqrt(lam**2 * cv2_denom)
 
     def binomial_trait_power(
-        self, n=100, af=0.2, beta=0.05, n_mean=10.0, r2=1.0, alpha=5e-8
+        self, n=100, af=0.2, beta=0.05, n_mean=10.0, r2=1.0, alpha=5e-8, var_g=None
     ):
         r"""Power to detect the association under the binomial trait model.
 
         Args:
             n (`int`): number of individuals.
             af (`float`): allele frequency (:math:`0 < \text{af} < 1`).
+                Ignored when ``var_g`` is provided.
             beta (`float`): per-allele change in success probability.
             n_mean (`float`): mean trials per individual :math:`\bar{n}`.
             r2 (`float`): LD / imputation-accuracy :math:`r^2`
                 (:math:`0 < r^2 \leq 1`).
             alpha (`float`): p-value threshold.
+            var_g (`float`, optional): genotype / copy-number variance to use in
+                place of :math:`2\,\text{af}(1-\text{af})`.
         Returns:
             power (`float`): power in :math:`[0, 1]`.
 
         """
-        ncp = self.ncp_binomial(n, af, beta, n_mean, r2)
+        ncp = self.ncp_binomial(n, af, beta, n_mean, r2, var_g=var_g)
         return self.llr_power(alpha=alpha, df=1, ncp=ncp)
 
     def binomial_trait_power_with_nvar(
@@ -652,12 +718,14 @@ class GwasBinomialTrait(Gwas):
         n_sigma=1.0,
         r2=1.0,
         alpha=5e-8,
+        var_g=None,
     ):
         r"""Power with :math:`\pm` ``n_sigma`` uncertainty bands from variable trial counts.
 
         Args:
             n (`int`): number of individuals.
             af (`float`): allele frequency (:math:`0 < \text{af} < 1`).
+                Ignored when ``var_g`` is provided.
             beta (`float`): per-allele change in success probability.
             n_mean (`float`): mean trials per individual :math:`\bar{n}`.
             n_var (`float`): variance of trials per individual.
@@ -665,6 +733,8 @@ class GwasBinomialTrait(Gwas):
             r2 (`float`): LD / imputation-accuracy :math:`r^2`
                 (:math:`0 < r^2 \leq 1`).
             alpha (`float`): p-value threshold.
+            var_g (`float`, optional): genotype / copy-number variance.  Supported
+                only when ``n_var`` = 0; see :meth:`ncp_binomial_sd`.
         Returns:
             (power_low, power_mid, power_high) (`tuple[float, float, float]`):
                 power at :math:`\lambda - \sigma_\lambda`,
@@ -672,8 +742,8 @@ class GwasBinomialTrait(Gwas):
                 :math:`\lambda + \sigma_\lambda`.
 
         """
-        lam = self.ncp_binomial(n, af, beta, n_mean, r2)
-        sd = self.ncp_binomial_sd(n, af, beta, n_mean, n_var, r2)
+        lam = self.ncp_binomial(n, af, beta, n_mean, r2, var_g=var_g)
+        sd = self.ncp_binomial_sd(n, af, beta, n_mean, n_var, r2, var_g=var_g)
         return (
             self.llr_power(alpha=alpha, df=1, ncp=max(0.0, lam - n_sigma * sd)),
             self.llr_power(alpha=alpha, df=1, ncp=lam),
@@ -681,25 +751,28 @@ class GwasBinomialTrait(Gwas):
         )
 
     def binomial_trait_opt_n(
-        self, af=0.2, beta=0.05, n_mean=10.0, power=0.8, r2=1.0, alpha=5e-8
+        self, af=0.2, beta=0.05, n_mean=10.0, power=0.8, r2=1.0, alpha=5e-8, var_g=None
     ):
         r"""Minimum sample size to achieve the target power.
 
         Args:
             af (`float`): allele frequency (:math:`0 < \text{af} < 1`).
+                Ignored when ``var_g`` is provided.
             beta (`float`): per-allele change in success probability.
             n_mean (`float`): mean trials per individual :math:`\bar{n}`.
             power (`float`): target power level in :math:`(0, 1)`.
             r2 (`float`): LD / imputation-accuracy :math:`r^2`
                 (:math:`0 < r^2 \leq 1`).
             alpha (`float`): p-value threshold.
+            var_g (`float`, optional): genotype / copy-number variance to use in
+                place of :math:`2\,\text{af}(1-\text{af})`.
         Returns:
             opt_n (`float`): required :math:`N` (fractional; take
                 :math:`\lceil \cdot \rceil` in practice).
 
         """
         assert 0.0 < power < 1.0
-        f = lambda n: self.binomial_trait_power(n, af, beta, n_mean, r2, alpha) - power
+        f = lambda n: self.binomial_trait_power(n, af, beta, n_mean, r2, alpha, var_g=var_g) - power
         try:
             opt_n = root_scalar(f, bracket=(1.0, 1e10)).root
         except (OverflowError, ValueError):
@@ -707,13 +780,13 @@ class GwasBinomialTrait(Gwas):
         return opt_n
 
     def binomial_trait_beta_power(
-        self, n=100, af=0.2, n_mean=10.0, power=0.8, r2=1.0, alpha=5e-8
+        self, n=100, af=0.2, n_mean=10.0, power=0.8, r2=1.0, alpha=5e-8, var_g=None
     ):
         r"""Minimum detectable :math:`|\beta|` at the target power level.
 
-        :math:`\beta` is bounded above so that
-        :math:`p_i = \mu + \beta(g_i - 2\,\text{af})` stays in :math:`(0,1)`
-        for all genotypes.  The tightest constraint is:
+        For SNPs (:math:`g \in \{0,1,2\}`), :math:`\beta` is bounded above so
+        that :math:`p_i = \mu + \beta(g_i - 2\,\text{af})` stays in
+        :math:`(0,1)` for all genotypes:
 
         .. math::
 
@@ -722,26 +795,38 @@ class GwasBinomialTrait(Gwas):
                 \frac{\mu}{2\,\text{af}}
             \right)
 
+        When ``var_g`` is supplied the copy-number range is unknown, so the
+        solver uses :math:`\beta_\max = \min(\mu,\,1-\mu)` as a conservative
+        bound (valid at the population mean; may not hold for extreme copy
+        numbers in the tails of the CNV distribution).
+
         Args:
             n (`int`): number of individuals.
             af (`float`): allele frequency (:math:`0 < \text{af} < 1`).
+                Used for :math:`\beta_\max` when ``var_g`` is ``None``.
             n_mean (`float`): mean trials per individual :math:`\bar{n}`.
             power (`float`): target power level in :math:`(0, 1)`.
             r2 (`float`): LD / imputation-accuracy :math:`r^2`
                 (:math:`0 < r^2 \leq 1`).
             alpha (`float`): p-value threshold.
+            var_g (`float`, optional): genotype / copy-number variance to use in
+                place of :math:`2\,\text{af}(1-\text{af})`.
         Returns:
             opt_beta (`float`): minimum detectable :math:`|\beta|`.
 
         """
         assert 0.0 < power < 1.0
-        # Tightest constraint keeping p_i in (0,1) for all genotypes:
-        #   g=2 carrier: mu + 2*(1-af)*beta < 1  =>  beta < (1-mu) / (2*(1-af))
-        #   g=0 carrier: mu - 2*af*beta     > 0  =>  beta < mu     / (2*af)
-        beta_max = (
-            min((1.0 - self.mu) / (2.0 * (1.0 - af)), self.mu / (2.0 * af)) * 0.9999
-        )
-        f = lambda b: self.binomial_trait_power(n, af, b, n_mean, r2, alpha) - power
+        if var_g is None:
+            # Tightest constraint keeping p_i in (0,1) for all genotypes:
+            #   g=2 carrier: mu + 2*(1-af)*beta < 1  =>  beta < (1-mu) / (2*(1-af))
+            #   g=0 carrier: mu - 2*af*beta     > 0  =>  beta < mu     / (2*af)
+            beta_max = (
+                min((1.0 - self.mu) / (2.0 * (1.0 - af)), self.mu / (2.0 * af)) * 0.9999
+            )
+        else:
+            # Copy-number range unknown; bound by population-mean constraint only.
+            beta_max = min(self.mu, 1.0 - self.mu) * 0.9999
+        f = lambda b: self.binomial_trait_power(n, af, b, n_mean, r2, alpha, var_g=var_g) - power
         try:
             opt_beta = root_scalar(f, bracket=(1e-9, beta_max)).root
         except (OverflowError, ValueError):
@@ -749,7 +834,7 @@ class GwasBinomialTrait(Gwas):
         return opt_beta
 
     def power_curve(
-        self, sample_sizes, af=0.2, beta=0.05, n_mean=10.0, r2=1.0, alpha=5e-8
+        self, sample_sizes, af=0.2, beta=0.05, n_mean=10.0, r2=1.0, alpha=5e-8, var_g=None
     ):
         r"""Power as a function of sample size (vectorised).
 
@@ -759,18 +844,21 @@ class GwasBinomialTrait(Gwas):
         Args:
             sample_sizes (`array-like`): array of :math:`N` values.
             af (`float`): allele frequency (:math:`0 < \text{af} < 1`).
+                Ignored when ``var_g`` is provided.
             beta (`float`): per-allele change in success probability.
             n_mean (`float`): mean trials per individual :math:`\bar{n}`.
             r2 (`float`): LD / imputation-accuracy :math:`r^2`
                 (:math:`0 < r^2 \leq 1`).
             alpha (`float`): p-value threshold.
+            var_g (`float`, optional): genotype / copy-number variance to use in
+                place of :math:`2\,\text{af}(1-\text{af})`.
         Returns:
             powers (`np.ndarray`): power at each sample size.
 
         """
         ns = np.asarray(sample_sizes, dtype=float)
-        var_g = 2.0 * af * (1.0 - af)
-        ncps = r2 * ns * beta**2 * var_g * n_mean / (self.mu * (1.0 - self.mu))
+        vg = self.genotype_var(af, var_g)
+        ncps = r2 * ns * beta**2 * vg * n_mean / (self.mu * (1.0 - self.mu))
         chi2_crit = ncx2.ppf(1.0 - alpha, df=1, nc=0)
         return 1.0 - ncx2.cdf(chi2_crit, df=1, nc=ncps)
 
@@ -802,6 +890,9 @@ class GwasPoisson(Gwas):
 
         \lambda = r^2 \, N \, \beta^2 \cdot 2\,\text{af}(1-\text{af}) \cdot
         \begin{cases} \mu & \text{log link} \\ 1/\mu & \text{identity link} \end{cases}
+
+    For CNV predictors pass ``var_g`` = :math:`\text{Var}(C)` to replace
+    :math:`2\,\text{af}(1-\text{af})` with the copy-number variance.
     """
 
     def __init__(self, mu=1.0, link="log"):
@@ -876,85 +967,103 @@ class GwasPoisson(Gwas):
         """
         return log_rr * mu
 
-    def ncp_poisson(self, n=100, af=0.2, beta=0.1, r2=1.0):
+    def ncp_poisson(self, n=100, af=0.2, beta=0.1, r2=1.0, var_g=None):
         r"""Non-centrality parameter for the Poisson-trait score test.
 
         .. math::
 
-            \lambda = r^2 \, N \, \beta^2 \cdot 2\,\text{af}(1-\text{af}) \cdot
+            \lambda = r^2 \, N \, \beta^2 \cdot V_g \cdot
             \begin{cases} \mu & \text{log link} \\ 1/\mu & \text{identity link} \end{cases}
+
+        where :math:`V_g = 2\,\text{af}(1-\text{af})` for SNPs or
+        :math:`V_g = \text{Var}(C)` when ``var_g`` is supplied.
 
         Args:
             n (`int`): number of individuals.
             af (`float`): allele frequency (:math:`0 < \text{af} < 1`).
+                Ignored when ``var_g`` is provided.
             beta (`float`): per-allele log-rate-ratio (log link) or rate change (identity link).
             r2 (`float`): LD / imputation-accuracy :math:`r^2` (:math:`0 < r^2 \leq 1`).
+            var_g (`float`, optional): genotype / copy-number variance to use in
+                place of :math:`2\,\text{af}(1-\text{af})`.
         Returns:
             ncp (`float`): non-centrality parameter.
 
         """
         assert n > 0
-        assert 0.0 < af < 1.0
         assert 0.0 < r2 <= 1.0
-        var_g = 2.0 * af * (1.0 - af)
+        if var_g is None:
+            assert 0.0 < af < 1.0
+        vg = self.genotype_var(af, var_g)
         if self.link == "log":
-            return r2 * n * beta**2 * var_g * self.mu
+            return r2 * n * beta**2 * vg * self.mu
         else:
-            return r2 * n * beta**2 * var_g / self.mu
+            return r2 * n * beta**2 * vg / self.mu
 
-    def poisson_trait_power(self, n=100, af=0.2, beta=0.1, r2=1.0, alpha=5e-8):
+    def poisson_trait_power(self, n=100, af=0.2, beta=0.1, r2=1.0, alpha=5e-8, var_g=None):
         r"""Power to detect association under the Poisson trait model.
 
         Args:
             n (`int`): number of individuals.
             af (`float`): allele frequency.
+                Ignored when ``var_g`` is provided.
             beta (`float`): per-allele log-rate-ratio (log link) or rate change (identity link).
             r2 (`float`): LD / imputation-accuracy :math:`r^2` (:math:`0 < r^2 \leq 1`).
             alpha (`float`): p-value threshold.
+            var_g (`float`, optional): genotype / copy-number variance to use in
+                place of :math:`2\,\text{af}(1-\text{af})`.
         Returns:
             power (`float`): power in :math:`[0, 1]`.
 
         """
-        ncp = self.ncp_poisson(n, af, beta, r2)
+        ncp = self.ncp_poisson(n, af, beta, r2, var_g=var_g)
         return self.llr_power(alpha=alpha, df=1, ncp=ncp)
 
-    def poisson_trait_opt_n(self, af=0.2, beta=0.1, power=0.8, r2=1.0, alpha=5e-8):
+    def poisson_trait_opt_n(self, af=0.2, beta=0.1, power=0.8, r2=1.0, alpha=5e-8, var_g=None):
         r"""Minimum sample size to achieve target power.
 
         Args:
             af (`float`): allele frequency.
+                Ignored when ``var_g`` is provided.
             beta (`float`): per-allele log-rate-ratio (log link) or rate change (identity link).
             power (`float`): target power level.
             r2 (`float`): LD / imputation-accuracy :math:`r^2` (:math:`0 < r^2 \leq 1`).
             alpha (`float`): p-value threshold.
+            var_g (`float`, optional): genotype / copy-number variance to use in
+                place of :math:`2\,\text{af}(1-\text{af})`.
         Returns:
             opt_n (`float`): required :math:`N` (fractional; take :math:`\lceil \cdot \rceil` in practice).
 
         """
         assert 0.0 < power < 1.0
-        f = lambda n: self.poisson_trait_power(n, af, beta, r2, alpha) - power
+        f = lambda n: self.poisson_trait_power(n, af, beta, r2, alpha, var_g=var_g) - power
         try:
             opt_n = root_scalar(f, bracket=(1.0, 1e10)).root
         except (OverflowError, ValueError):
             opt_n = np.nan
         return opt_n
 
-    def poisson_trait_beta_power(self, n=100, af=0.2, power=0.8, r2=1.0, alpha=5e-8):
+    def poisson_trait_beta_power(self, n=100, af=0.2, power=0.8, r2=1.0, alpha=5e-8, var_g=None):
         r"""Minimum detectable :math:`|\beta|` at the target power level.
 
         The solver bracket upper bound is:
 
         - **Log link**: :math:`\log(100)` (no analytical bound; cap avoids blowup).
-        - **Identity link**: :math:`\mu / (2\,\text{af})`, the tightest constraint
-          keeping all Poisson means positive
+        - **Identity link (SNP)**: :math:`\mu / (2\,\text{af})`, the tightest
+          constraint keeping all Poisson means positive
           (:math:`\mu_i = \mu + \beta(g_i - 2\,\text{af}) > 0` at :math:`g_i = 0`).
+        - **Identity link (CNV)**: :math:`\mu` as a conservative bound when
+          ``var_g`` is supplied and the copy-number range is unknown.
 
         Args:
             n (`int`): number of individuals.
             af (`float`): allele frequency.
+                Used for :math:`\beta_\max` (identity link) when ``var_g`` is ``None``.
             power (`float`): target power level.
             r2 (`float`): LD / imputation-accuracy :math:`r^2` (:math:`0 < r^2 \leq 1`).
             alpha (`float`): p-value threshold.
+            var_g (`float`, optional): genotype / copy-number variance to use in
+                place of :math:`2\,\text{af}(1-\text{af})`.
         Returns:
             opt_beta (`float`): minimum detectable :math:`\beta`.
 
@@ -962,17 +1071,20 @@ class GwasPoisson(Gwas):
         assert 0.0 < power < 1.0
         if self.link == "log":
             beta_max = np.log(100)
-        else:
+        elif var_g is None:
             # g=0 genotype: mu - 2*af*beta > 0  =>  beta < mu/(2*af)
             beta_max = self.mu / (2.0 * af) * 0.9999
-        f = lambda b: self.poisson_trait_power(n, af, b, r2, alpha) - power
+        else:
+            # Copy-number range unknown; bound conservatively by mu.
+            beta_max = self.mu * 0.9999
+        f = lambda b: self.poisson_trait_power(n, af, b, r2, alpha, var_g=var_g) - power
         try:
             opt_beta = root_scalar(f, bracket=(1e-9, beta_max)).root
         except (OverflowError, ValueError):
             opt_beta = np.nan
         return opt_beta
 
-    def power_curve(self, sample_sizes, af=0.2, beta=0.1, r2=1.0, alpha=5e-8):
+    def power_curve(self, sample_sizes, af=0.2, beta=0.1, r2=1.0, alpha=5e-8, var_g=None):
         r"""Power as a function of sample size (vectorised).
 
         All NCPs are computed in one pass and a single :func:`ncx2.cdf` call is
@@ -981,18 +1093,21 @@ class GwasPoisson(Gwas):
         Args:
             sample_sizes (`array-like`): array of :math:`N` values.
             af (`float`): allele frequency.
+                Ignored when ``var_g`` is provided.
             beta (`float`): per-allele log-rate-ratio (log link) or rate change (identity link).
             r2 (`float`): LD / imputation-accuracy :math:`r^2` (:math:`0 < r^2 \leq 1`).
             alpha (`float`): p-value threshold.
+            var_g (`float`, optional): genotype / copy-number variance to use in
+                place of :math:`2\,\text{af}(1-\text{af})`.
         Returns:
             powers (`np.ndarray`): power at each sample size.
 
         """
         ns = np.asarray(sample_sizes, dtype=float)
-        var_g = 2.0 * af * (1.0 - af)
+        vg = self.genotype_var(af, var_g)
         if self.link == "log":
-            ncps = r2 * ns * beta**2 * var_g * self.mu
+            ncps = r2 * ns * beta**2 * vg * self.mu
         else:
-            ncps = r2 * ns * beta**2 * var_g / self.mu
+            ncps = r2 * ns * beta**2 * vg / self.mu
         chi2_crit = ncx2.ppf(1.0 - alpha, df=1, nc=0)
         return 1.0 - ncx2.cdf(chi2_crit, df=1, nc=ncps)
